@@ -1,7 +1,7 @@
 """
 test_production_pipeline.py
 ---------------------------
-End-to-end integration test suite for the NovaAI Phase 5 production pipeline.
+End-to-end integration test suite for the Orionix Phase 5 production pipeline.
 
 Verifies:
   1. GET /health is functional

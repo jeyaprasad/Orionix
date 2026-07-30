@@ -1,7 +1,7 @@
 /**
  * api.js
  * ------
- * Reusable network service layer for NovaAI Frontend.
+ * Reusable network service layer for Orionix Frontend.
  * Combines configuration from Vite environment variables.
  */
 
@@ -65,7 +65,7 @@ export async function analyzeImage(file) {
     } catch (err) {
         // Fallback for network timeouts or browser connection drops
         if (err.name === "TypeError" && err.message.includes("fetch")) {
-            throw new Error("Could not connect to NovaAI backend. Please verify that the API server is running.");
+            throw new Error("Could not connect to Orionix backend. Please verify that the API server is running.");
         }
         throw err;
     }

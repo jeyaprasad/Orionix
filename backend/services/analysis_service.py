@@ -1,7 +1,7 @@
 """
 analysis_service.py
 -------------------
-Orchestration service for the NovaAI Earth Observation Analysis pipeline.
+Orchestration service for the Orionix Earth Observation Analysis pipeline.
 
 Coordinates the complete flow:
   1. Image loading and validation        — image_loader
@@ -105,7 +105,10 @@ class AnalysisService:
         # ----------------------------------------------------------------
         logger.info("[analyze_image] Stage 2: Ensuring RemoteCLIP model is loaded.")
         self._ensure_model_loaded()
-        vision_model_id = f"RemoteCLIP {remoteclip_service.model_name}"
+        if not remoteclip_service._checkpoint_valid():
+            vision_model_id = "RemoteCLIP ViT-L-14 (Mock Mode)"
+        else:
+            vision_model_id = f"RemoteCLIP {remoteclip_service.model_name}"
         logger.info(f"[analyze_image] Stage 2: Model ready — {vision_model_id}.")
 
         # ----------------------------------------------------------------
@@ -122,6 +125,8 @@ class AnalysisService:
         eo_result = self.interpret_scene(
             raw_outputs["zero_shot_inspection"],
             vision_model=vision_model_id,
+            vegetation_health_score=raw_outputs.get("vegetation_health_score"),
+            vegetation_health_disclaimer=raw_outputs.get("vegetation_health_disclaimer"),
         )
         logger.info(
             f"[analyze_image] Stage 4: EO interpretation complete. "
@@ -249,7 +254,7 @@ class AnalysisService:
             logger.info("[analyze_image] Stage 6.5: Unified HTML generated successfully.")
         except Exception as render_err:
             logger.error(f"[analyze_image] Stage 6.5 HTML Render crash: {render_err}")
-            professional_report = f"<h1>NovaAI Error</h1><p>Failed to render report: {render_err}</p>"
+            professional_report = f"<h1>Orionix Error</h1><p>Failed to render report: {render_err}</p>"
 
 
         # ----------------------------------------------------------------
@@ -280,6 +285,8 @@ class AnalysisService:
             gpt_analysis=gpt_text,
             professional_report=professional_report,
             warning=gpt_warning,
+            vegetation_health_score=eo_result.vegetation_health_score,
+            vegetation_health_disclaimer=eo_result.vegetation_health_disclaimer,
             # Frontend-compatible fields
             insight=insight,
             classes=classes,
@@ -324,6 +331,8 @@ class AnalysisService:
         self,
         zero_shot_inspection: list,
         vision_model: Optional[str] = None,
+        vegetation_health_score: Optional[float] = None,
+        vegetation_health_disclaimer: Optional[str] = None,
     ):
         """
         Convert raw zero_shot_inspection entries into structured EO context.
@@ -332,6 +341,8 @@ class AnalysisService:
             zero_shot_inspection: List of dicts (tag, cosine_similarity, confidence_score)
                                   from run_remoteclip_inference output.
             vision_model:         Optional model provenance string.
+            vegetation_health_score: Optional float score.
+            vegetation_health_disclaimer: Optional disclaimer string.
 
         Returns:
             EOInterpretation Pydantic model.
@@ -344,7 +355,12 @@ class AnalysisService:
             )
             for item in zero_shot_inspection
         ]
-        return interpret(entries, vision_model=vision_model)
+        return interpret(
+            entries,
+            vision_model=vision_model,
+            vegetation_health_score=vegetation_health_score,
+            vegetation_health_disclaimer=vegetation_health_disclaimer,
+        )
 
     # ------------------------------------------------------------------
     # Private helpers
@@ -361,6 +377,9 @@ class AnalysisService:
         Ensures the RemoteCLIP singleton is loaded.
         Reuses the already-loaded model if available (no re-loading per request).
         """
+        if not remoteclip_service._checkpoint_valid():
+            logger.warning("RemoteCLIP checkpoint not found or incomplete. Skipping model load (running in mock mode).")
+            return
         if remoteclip_service.model is None:
             logger.info("RemoteCLIP model not yet loaded — bootstrapping now.")
             remoteclip_service.load_model()

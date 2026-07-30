@@ -54,7 +54,7 @@ def test_valid_high_confidence():
     assert "Forest" in payload.user_prompt, "dominant land cover must appear in user_prompt"
     assert "Agriculture" in payload.user_prompt, "secondary land cover must appear in user_prompt"
     assert "High" in payload.user_prompt, "confidence must appear in user_prompt"
-    assert "NovaAI" in payload.system_prompt, "system prompt must define NovaAI"
+    assert "Orionix" in payload.system_prompt, "system prompt must define Orionix"
     assert "Never invent" in payload.system_prompt, "anti-hallucination instruction must be present"
     assert "Executive Summary" in payload.user_prompt, "new report structure must be enforced"
 

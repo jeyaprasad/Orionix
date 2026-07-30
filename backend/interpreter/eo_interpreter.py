@@ -94,6 +94,8 @@ def _build_summary(
 def interpret(
     similarity_entries: List[SimilarityEntry],
     vision_model: Optional[str] = None,
+    vegetation_health_score: Optional[float] = None,
+    vegetation_health_disclaimer: Optional[str] = None,
 ) -> EOInterpretation:
     """
     Transform RemoteCLIP zero-shot similarity results into structured EO context.
@@ -202,6 +204,8 @@ def interpret(
         summary=summary,
         vision_model=vision_model,
         interpretation_time_ms=round(elapsed_ms, 3),
+        vegetation_health_score=vegetation_health_score,
+        vegetation_health_disclaimer=vegetation_health_disclaimer,
     )
 
     logger.info(f"EO interpretation completed in {elapsed_ms:.2f}ms.")

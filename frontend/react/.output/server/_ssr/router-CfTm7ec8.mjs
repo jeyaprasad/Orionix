@@ -2,10 +2,10 @@ import { a as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react, t as QueryClientProvider } from "../_libs/react+tanstack__react-query.mjs";
 import { c as HeadContent, d as Outlet, f as lazyRouteComponent, g as useRouter, h as Link, m as createRootRouteWithContext, p as createFileRoute, s as Scripts, u as createRouter } from "../_libs/@tanstack/react-router+[...].mjs";
 import { t as QueryClient } from "../_libs/tanstack__query-core.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/router-BjfSz_WH.js
+//#region node_modules/.nitro/vite/services/ssr/assets/router-CfTm7ec8.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
-var styles_default = "/assets/styles-CQ2l8uUE.css";
+var styles_default = "/assets/styles-jPIMG1Yr.css";
 function reportError(error, context = {}) {
 	const errorObj = error instanceof Error ? error : new Error(String(error));
 	console.error("[NovaAI Error]", {
@@ -91,10 +91,10 @@ var Route$2 = createRootRouteWithContext()({
 				name: "viewport",
 				content: "width=device-width, initial-scale=1"
 			},
-			{ title: "NOVA AI – Multimodal Satellite Intelligence" },
+			{ title: "Orionix – Multimodal Satellite Intelligence" },
 			{
 				name: "description",
-				content: "NOVA AI enhances GPT-OSS with vision built for ISRO Earth Observation data — turning raw satellite imagery into actionable intelligence."
+				content: "Orionix enhances GPT-OSS with vision built for ISRO Earth Observation data — turning raw satellite imagery into actionable intelligence."
 			},
 			{
 				name: "author",
@@ -102,7 +102,7 @@ var Route$2 = createRootRouteWithContext()({
 			},
 			{
 				property: "og:title",
-				content: "NOVA AI – Multimodal Satellite Intelligence"
+				content: "Orionix – Multimodal Satellite Intelligence"
 			},
 			{
 				property: "og:description",
@@ -118,7 +118,7 @@ var Route$2 = createRootRouteWithContext()({
 			},
 			{
 				name: "twitter:site",
-				content: "@NovaAI"
+				content: "@Orionix"
 			}
 		],
 		links: [
@@ -171,9 +171,9 @@ function RootComponent() {
 		children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Outlet, {})
 	});
 }
-var $$splitComponentImporter$1 = () => import("./aichat-DXTHw1yy.mjs");
+var $$splitComponentImporter$1 = () => import("./aichat-CEqGx-OD.mjs");
 var Route$1 = createFileRoute("/aichat")({ component: lazyRouteComponent($$splitComponentImporter$1, "component") });
-var $$splitComponentImporter = () => import("./routes-DAFcNEq_.mjs");
+var $$splitComponentImporter = () => import("./routes-DjMlJBrW.mjs");
 var Route = createFileRoute("/")({ component: lazyRouteComponent($$splitComponentImporter, "component") });
 var AichatRoute = Route$1.update({
 	id: "/aichat",

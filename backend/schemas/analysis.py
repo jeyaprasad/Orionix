@@ -85,6 +85,14 @@ class AnalysisResponse(BaseModel):
         None,
         description="Present when status is 'partial_success'. Describes why GPT was skipped."
     )
+    vegetation_health_score: Optional[float] = Field(
+        None,
+        description="Lightweight 0-100 vegetation health score proxy."
+    )
+    vegetation_health_disclaimer: Optional[str] = Field(
+        None,
+        description="Disclaimer explaining that this is an RGB-based proxy."
+    )
 
     # --- Frontend-compatible fields (mirrors the existing UI contract) ---
     insight: str = Field(

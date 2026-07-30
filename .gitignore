@@ -11,7 +11,7 @@ dist/
 build/
 .vite/
 
-# Nova AI Models and Data
+# Orionix Models and Data
 models/
 data/
 *.log

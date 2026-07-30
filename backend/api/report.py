@@ -20,7 +20,7 @@ async def generate_pdf(request: PDFReportRequest):
         )
         
         timestamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d_%H-%M-%S")
-        filename = f"NovaAI_Report_{timestamp}.pdf"
+        filename = f"Orionix_Report_{timestamp}.pdf"
         
         headers = {
             "Content-Disposition": f'attachment; filename="{filename}"'

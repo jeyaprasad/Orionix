@@ -94,6 +94,14 @@ class EOInterpretation(BaseModel):
         ...,
         description="Human-readable interpretation summary (no GPT)"
     )
+    vegetation_health_score: Optional[float] = Field(
+        None,
+        description="Lightweight 0-100 vegetation health score proxy."
+    )
+    vegetation_health_disclaimer: Optional[str] = Field(
+        None,
+        description="Disclaimer explaining that this is an RGB-based proxy."
+    )
     # Provenance
     vision_model: Optional[str] = Field(None, description="Source vision model")
     interpretation_time_ms: Optional[float] = Field(None, description="Interpreter execution time in ms")

@@ -1088,7 +1088,7 @@ body {
 }
 
 /* NAVBAR STYLING FOR AICHAT */
-.nova-nav {
+.orionix-nav {
   position: fixed;
   top: 0;
   left: 0;
@@ -1104,7 +1104,7 @@ body {
   height: 80px;
 }
 
-.nova-logo {
+.orionix-logo {
   font-family: 'Space Mono', monospace;
   font-size: 1.05rem;
   font-weight: 700;
@@ -1116,24 +1116,24 @@ body {
   text-decoration: none;
 }
 
-.nova-dot {
+.orionix-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--aurora);
   box-shadow: 0 0 12px var(--aurora);
-  animation: nova-pulse 2s ease-in-out infinite;
+  animation: orionix-pulse 2s ease-in-out infinite;
 }
 
-.nova-live {
+.orionix-live {
   font-size: 0.6rem;
   color: #ff4e6a;
   letter-spacing: 0.2em;
   margin-left: 6px;
-  animation: nova-blink 1.6s ease-in-out infinite;
+  animation: orionix-blink 1.6s ease-in-out infinite;
 }
 
-@keyframes nova-blink {
+@keyframes orionix-blink {
 
   0%,
   100% {
@@ -1145,7 +1145,7 @@ body {
   }
 }
 
-@keyframes nova-pulse {
+@keyframes orionix-pulse {
 
   0%,
   100% {
@@ -1159,7 +1159,7 @@ body {
   }
 }
 
-.nova-links {
+.orionix-links {
   display: flex;
   gap: 30px;
   list-style: none;
@@ -1167,7 +1167,7 @@ body {
   padding: 0;
 }
 
-.nova-links a {
+.orionix-links a {
   color: var(--muted);
   text-decoration: none;
   font-size: 0.85rem;
@@ -1177,7 +1177,7 @@ body {
   cursor: pointer;
 }
 
-.nova-links a::after {
+.orionix-links a::after {
   content: '';
   position: absolute;
   left: 0;
@@ -1188,17 +1188,17 @@ body {
   transition: width 0.25s;
 }
 
-.nova-links a:hover,
-.nova-links a.active {
+.orionix-links a:hover,
+.orionix-links a.active {
   color: var(--star);
 }
 
-.nova-links a:hover::after,
-.nova-links a.active::after {
+.orionix-links a:hover::after,
+.orionix-links a.active::after {
   width: 100%;
 }
 
-.nova-tag {
+.orionix-tag {
   font-family: 'Space Mono', monospace;
   font-size: 0.7rem;
   color: var(--nebula);

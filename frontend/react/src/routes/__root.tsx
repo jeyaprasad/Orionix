@@ -77,14 +77,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "NOVA AI – Multimodal Satellite Intelligence" },
+      { title: "Orionix – Multimodal Satellite Intelligence" },
       {
         name: "description",
         content:
-          "NOVA AI enhances GPT-OSS with vision built for ISRO Earth Observation data — turning raw satellite imagery into actionable intelligence.",
+          "Orionix enhances GPT-OSS with vision built for ISRO Earth Observation data — turning raw satellite imagery into actionable intelligence.",
       },
       { name: "author", content: "Team Yakuzas" },
-      { property: "og:title", content: "NOVA AI – Multimodal Satellite Intelligence" },
+      { property: "og:title", content: "Orionix – Multimodal Satellite Intelligence" },
       {
         property: "og:description",
         content:
@@ -92,7 +92,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@NovaAI" },
+      { name: "twitter:site", content: "@Orionix" },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

@@ -1,4 +1,4 @@
-.nova-root {
+.orionix-root {
   --void: #03030a;
   --deep: #080818;
   --surface: #0d0d24;
@@ -22,25 +22,25 @@
   position: relative;
 }
 
-.nova-root * {
+.orionix-root * {
   box-sizing: border-box;
 }
 
-.nova-root h1,
-.nova-root h2,
-.nova-root h3,
-.nova-root p,
-.nova-root ul {
+.orionix-root h1,
+.orionix-root h2,
+.orionix-root h3,
+.orionix-root p,
+.orionix-root ul {
   margin: 0;
   padding: 0;
 }
 
-.nova-root ul {
+.orionix-root ul {
   list-style: none;
 }
 
 /* progress bar */
-.nova-progress {
+.orionix-progress {
   position: fixed;
   top: 0;
   left: 0;
@@ -64,16 +64,16 @@
     radial-gradient(ellipse 80% 60% at 50% 0%, #1a0a3a 0%, var(--void) 70%);
 }
 
-.nova-star {
+.orionix-star {
   position: absolute;
   border-radius: 50%;
   background: white;
-  animation: nova-tw var(--d, 3s) ease-in-out infinite alternate;
+  animation: orionix-tw var(--d, 3s) ease-in-out infinite alternate;
   opacity: var(--o, 0.6);
   box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
 }
 
-@keyframes nova-tw {
+@keyframes orionix-tw {
   from {
     opacity: var(--o);
     transform: scale(1);
@@ -86,7 +86,7 @@
 }
 
 /* grid + grain overlays */
-.nova-grid-overlay {
+.orionix-grid-overlay {
   position: fixed;
   inset: 0;
   z-index: 1;
@@ -98,7 +98,7 @@
   mask-image: radial-gradient(ellipse at center, black 40%, transparent 90%);
 }
 
-.nova-grain {
+.orionix-grain {
   position: fixed;
   inset: 0;
   z-index: 1;
@@ -108,7 +108,7 @@
 }
 
 /* nav */
-.nova-nav {
+.orionix-nav {
   position: fixed;
   top: 0;
   left: 0;
@@ -123,7 +123,7 @@
   border-bottom: 1px solid var(--border);
 }
 
-.nova-logo {
+.orionix-logo {
   font-family: 'Space Mono', monospace;
   font-size: 1.05rem;
   font-weight: 700;
@@ -134,24 +134,24 @@
   gap: 10px;
 }
 
-.nova-dot {
+.orionix-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   background: var(--aurora);
   box-shadow: 0 0 12px var(--aurora);
-  animation: nova-pulse 2s ease-in-out infinite;
+  animation: orionix-pulse 2s ease-in-out infinite;
 }
 
-.nova-live {
+.orionix-live {
   font-size: 0.6rem;
   color: var(--danger);
   letter-spacing: 0.2em;
   margin-left: 6px;
-  animation: nova-blink 1.6s ease-in-out infinite;
+  animation: orionix-blink 1.6s ease-in-out infinite;
 }
 
-@keyframes nova-blink {
+@keyframes orionix-blink {
 
   0%,
   100% {
@@ -163,7 +163,7 @@
   }
 }
 
-@keyframes nova-pulse {
+@keyframes orionix-pulse {
 
   0%,
   100% {
@@ -177,14 +177,14 @@
   }
 }
 
-.nova-links {
+.orionix-links {
   display: flex;
   gap: 30px;
   margin-left: auto;
   margin-right: 40px;
 }
 
-.nova-links a {
+.orionix-links a {
   color: var(--muted);
   text-decoration: none;
   font-size: 0.85rem;
@@ -193,7 +193,7 @@
   transition: color 0.2s;
 }
 
-.nova-links a::after {
+.orionix-links a::after {
   content: '';
   position: absolute;
   left: 0;
@@ -204,15 +204,15 @@
   transition: width 0.25s;
 }
 
-.nova-links a:hover {
+.orionix-links a:hover {
   color: var(--star);
 }
 
-.nova-links a:hover::after {
+.orionix-links a:hover::after {
   width: 100%;
 }
 
-.nova-tag {
+.orionix-tag {
   font-family: 'Space Mono', monospace;
   font-size: 0.7rem;
   color: var(--nebula);
@@ -224,7 +224,7 @@
 }
 
 /* sections */
-.nova-root section {
+.orionix-root section {
   position: relative;
   z-index: 2;
   scroll-margin-top: 80px;
@@ -258,7 +258,7 @@
   top: -120px;
   right: 0px;
   background: rgba(108, 71, 255, 0.22);
-  animation: nova-drift 18s ease-in-out infinite alternate;
+  animation: orionix-drift 18s ease-in-out infinite alternate;
 }
 
 .orb2 {
@@ -267,7 +267,7 @@
   bottom: -120px;
   left: 0px;
   background: rgba(0, 229, 200, 0.14);
-  animation: nova-drift 22s ease-in-out infinite alternate-reverse;
+  animation: orionix-drift 22s ease-in-out infinite alternate-reverse;
 }
 
 .orb3 {
@@ -276,10 +276,10 @@
   top: 40%;
   left: 45%;
   background: rgba(255, 78, 106, 0.06);
-  animation: nova-drift 26s ease-in-out infinite alternate;
+  animation: orionix-drift 26s ease-in-out infinite alternate;
 }
 
-@keyframes nova-drift {
+@keyframes orionix-drift {
   from {
     transform: translate(0, 0) scale(1);
   }
@@ -318,7 +318,7 @@
   background: var(--aurora);
 }
 
-.nova-root h1 {
+.orionix-root h1 {
   font-size: clamp(2.8rem, 5vw, 4.3rem);
   font-weight: 700;
   line-height: 1.05;
@@ -326,7 +326,7 @@
   margin-bottom: 24px;
 }
 
-.nova-root h1 .accent {
+.orionix-root h1 .accent {
   color: var(--aurora);
   position: relative;
 }
@@ -338,7 +338,7 @@
   background: var(--aurora);
   margin-left: 6px;
   vertical-align: middle;
-  animation: nova-blink 1s steps(2) infinite;
+  animation: orionix-blink 1s steps(2) infinite;
   box-shadow: 0 0 12px var(--aurora);
 }
 
@@ -348,16 +348,16 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: nova-shine 6s linear infinite;
+  animation: orionix-shine 6s linear infinite;
 }
 
-@keyframes nova-shine {
+@keyframes orionix-shine {
   to {
     background-position: 200% 0;
   }
 }
 
-.nova-root .hero-sub {
+.orionix-root .hero-sub {
   color: var(--muted);
   font-size: 1.05rem;
   max-width: 460px;
@@ -471,7 +471,7 @@
   position: absolute;
   border-radius: 50%;
   border: 1px solid var(--border);
-  animation: nova-spin var(--spd, 20s) linear infinite;
+  animation: orionix-spin var(--spd, 20s) linear infinite;
 }
 
 .orbit-ring .sat {
@@ -483,7 +483,7 @@
   filter: drop-shadow(0 0 8px var(--aurora));
 }
 
-@keyframes nova-spin {
+@keyframes orionix-spin {
   to {
     transform: rotate(360deg);
   }
@@ -543,11 +543,11 @@
   right: 0;
   height: 2px;
   background: linear-gradient(90deg, transparent, var(--aurora), transparent);
-  animation: nova-scan 3s linear infinite;
+  animation: orionix-scan 3s linear infinite;
   box-shadow: 0 0 12px var(--aurora);
 }
 
-@keyframes nova-scan {
+@keyframes orionix-scan {
   0% {
     top: 0
   }
@@ -572,10 +572,10 @@
   inset: -4px;
   border-radius: 50%;
   border: 1px solid var(--aurora);
-  animation: nova-ping 2.2s ease-out infinite;
+  animation: orionix-ping 2.2s ease-out infinite;
 }
 
-@keyframes nova-ping {
+@keyframes orionix-ping {
   0% {
     transform: scale(1);
     opacity: 1
@@ -649,10 +649,10 @@
   width: 100%;
   height: 40%;
   background: var(--aurora);
-  animation: nova-slide 2s ease-in-out infinite;
+  animation: orionix-slide 2s ease-in-out infinite;
 }
 
-@keyframes nova-slide {
+@keyframes orionix-slide {
   0% {
     transform: translateY(-100%)
   }
@@ -678,7 +678,7 @@
   display: flex;
   gap: 40px;
   width: max-content;
-  animation: nova-marq 40s linear infinite;
+  animation: orionix-marq 40s linear infinite;
 }
 
 .marquee-item {
@@ -693,7 +693,7 @@
   color: var(--aurora);
 }
 
-@keyframes nova-marq {
+@keyframes orionix-marq {
   to {
     transform: translateX(-50%);
   }
@@ -714,24 +714,24 @@
   margin-bottom: 14px;
 }
 
-.nova-root h2 {
+.orionix-root h2 {
   font-size: clamp(1.9rem, 3vw, 2.6rem);
   font-weight: 700;
   letter-spacing: -0.015em;
 }
 
-.nova-root .section-sub {
+.orionix-root .section-sub {
   color: var(--muted);
   margin: 14px auto 0;
   max-width: 640px;
 }
 
 /* OPTIMIZED CURSOR SPOTLIGHT */
-.nova-spot {
+.orionix-spot {
   position: relative;
 }
 
-.nova-spot::before {
+.orionix-spot::before {
   content: '';
   position: absolute;
   left: 0;
@@ -746,24 +746,24 @@
   transition: opacity 0.3s;
 }
 
-.nova-spot:hover::before {
+.orionix-spot:hover::before {
   opacity: 1;
 }
 
-.nova-spot>* {
+.orionix-spot>* {
   position: relative;
   z-index: 1;
   pointer-events: auto;
 }
 
 /* reveal */
-.nova-reveal {
+.orionix-reveal {
   opacity: 0;
   transform: translateY(24px);
   transition: opacity 0.7s ease, transform 0.7s ease;
 }
 
-.nova-in {
+.orionix-in {
   opacity: 1;
   transform: translateY(0);
 }
@@ -1074,11 +1074,11 @@ footer span {
 }
 
 @media (max-width: 768px) {
-  .nova-nav {
+  .orionix-nav {
     padding: 14px 20px;
   }
 
-  .nova-links {
+  .orionix-links {
     display: none;
   }
 

@@ -38,7 +38,7 @@ async def stream_chat(request: StreamChatRequest):
     logger.info(f"Received streaming chat request. Question: {request.question[:40]}...")
     
     # 1. Ground response context in results
-    system_prompt = f"""You are NovaAI, a helpful geospatial intelligence AI assistant.
+    system_prompt = f"""You are Orionix, a helpful geospatial intelligence AI assistant.
 You are grounded in the following Earth Observation (EO) Analysis Result:
 Dominant Land Cover: {request.result.get('dominant_land_cover', 'N/A')}
 Secondary Land Cover: {request.result.get('secondary_land_cover', 'N/A')}
@@ -94,7 +94,7 @@ Answer user questions accurately, professionally, and simply based on this conte
 async def test_chat(request: ChatRequest):
     logger.info("Received request on /api/chat/test")
     
-    system_prompt = "You are Nova Ai, a helpful intelligent assistant."
+    system_prompt = "You are Orionix, a helpful intelligent assistant."
     
     start_time = time.time()
     try:

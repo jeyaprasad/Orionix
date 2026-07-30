@@ -10,6 +10,6 @@ def setup_logging():
             logging.StreamHandler(sys.stdout)
         ]
     )
-    return logging.getLogger("nova_ai")
+    return logging.getLogger("orionix")
 
 logger = setup_logging()

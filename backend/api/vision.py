@@ -38,7 +38,9 @@ async def test_vision(file: UploadFile = File(...)):
 
     # 3. Ensure RemoteCLIP model is loaded, fallback to CPU if needed
     try:
-        if remoteclip_service.model is None:
+        if not remoteclip_service._checkpoint_valid():
+            logger.warning("RemoteCLIP checkpoint not found or incomplete. Skipping model load (running in mock mode).")
+        elif remoteclip_service.model is None:
             logger.info("RemoteCLIP singleton not loaded. Initializing now...")
             remoteclip_service.load_model()
     except RuntimeError as e:

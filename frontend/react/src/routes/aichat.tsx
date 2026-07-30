@@ -5,10 +5,10 @@ import { ChatInterface } from "../components/ui/ChatInterface";
 import "./aichat.css";
 
 export const Route = createFileRoute("/aichat")({
-  component: NovaDemo,
+  component: OrionixDemo,
 });
 
-function NovaDemo() {
+function OrionixDemo() {
   const {
     file,
     previewUrl,
@@ -53,16 +53,16 @@ function NovaDemo() {
     <div className="cb-root" style={{ paddingTop: '80px' }}>
       <div id="stars"></div>
 
-      <nav className="nova-nav">
-        <div className="nova-logo">
-          <div className="nova-dot" />
-          NOVA AI
-          <span className="nova-live">● LIVE</span>
+      <nav className="orionix-nav">
+        <div className="orionix-logo">
+          <div className="orionix-dot" />
+          Orionix
+          <span className="orionix-live">● LIVE</span>
         </div>
-        <ul className="nova-links">
+        <ul className="orionix-links">
           <li><Link to="/">Home</Link></li>
         </ul>
-        <div className="nova-tag">SIH25170</div>
+        <div className="orionix-tag">SIH25170</div>
       </nav>
 
       <div className="cb-layout">

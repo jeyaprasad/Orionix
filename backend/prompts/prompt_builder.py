@@ -1,7 +1,7 @@
 """
 prompt_builder.py
 -----------------
-Reusable Prompt Builder layer for NovaAI.
+Reusable Prompt Builder layer for Orionix.
 
 Responsibilities (and ONLY these):
   1. Validate the incoming EOContext.
@@ -188,7 +188,7 @@ class PromptBuilder:
     @staticmethod
     def _build_system_prompt() -> str:
         """
-        Returns the static NovaAI system prompt from templates.py.
+        Returns the static Orionix system prompt from templates.py.
 
         This method exists as an indirection point so that future prompt
         versioning or A/B testing can be added here without touching

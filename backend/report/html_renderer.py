@@ -108,7 +108,7 @@ class HTMLRenderer:
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NovaAI Geospatial Dashboard</title>
+    <title>Orionix Geospatial Dashboard</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono&display=swap');
         
@@ -518,7 +518,7 @@ class HTMLRenderer:
             <div class="header-left">
                 <div class="logo-row">
                     <div class="logo-orb"></div>
-                    <div class="logo-text">NOVA AI</div>
+                    <div class="logo-text">Orionix</div>
                 </div>
                 <h1>Geospatial Intelligence Report</h1>
                 <h2>Satellite Interpretation Framework</h2>

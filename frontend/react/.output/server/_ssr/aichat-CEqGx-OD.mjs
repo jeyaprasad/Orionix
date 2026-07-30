@@ -2,12 +2,12 @@ import { a as __toESM } from "../_runtime.mjs";
 import { n as AnimatePresence, t as motion } from "../_libs/framer-motion.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { h as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import "./router-BjfSz_WH.mjs";
+import "./router-CfTm7ec8.mjs";
 import { t as imageCompression } from "../_libs/browser-image-compression.mjs";
 import { t as Markdown } from "../_libs/react-markdown+[...].mjs";
 import { t as remarkGfm } from "../_libs/remark-gfm.mjs";
 import { t as m } from "../_libs/react-error-boundary.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/aichat-DXTHw1yy.js
+//#region node_modules/.nitro/vite/services/ssr/assets/aichat-CEqGx-OD.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var API_BASE = "http://localhost:8000";
@@ -176,64 +176,11 @@ function useAnalysis() {
 				const [data] = await Promise.all([fetchAnalysis, minDuration]);
 				setResult(data);
 				setStatus("done");
-				setMessages((prev) => {
-					const historySnapshot = prev.filter((m) => !m.isReport).map((m) => ({
-						role: m.role,
-						text: m.text
-					}));
-					setTimeout(async () => {
-						try {
-							setIsStreaming(true);
-							const streamController = new AbortController();
-							setAbortController(streamController);
-							const res = await fetch(`${API_BASE}/api/chat/stream`, {
-								method: "POST",
-								headers: { "Content-Type": "application/json" },
-								body: JSON.stringify({
-									question: prompt,
-									result: data,
-									history: historySnapshot
-								}),
-								signal: streamController.signal
-							});
-							if (!res.ok) throw new Error(`Chat request failed (${res.status})`);
-							const reader = res.body?.getReader();
-							const decoder = new TextDecoder();
-							if (!reader) throw new Error("No readable stream");
-							setMessages((m) => [...m, {
-								role: "assistant",
-								text: ""
-							}]);
-							let done = false;
-							while (!done) {
-								const { value, done: streamDone } = await reader.read();
-								done = streamDone;
-								if (value) {
-									const text = decoder.decode(value, { stream: true });
-									setMessages((m) => {
-										const updated = [...m];
-										const last = updated[updated.length - 1];
-										if (last && last.role === "assistant" && !last.isReport) updated[updated.length - 1] = {
-											...last,
-											text: last.text + text
-										};
-										return updated;
-									});
-								}
-							}
-						} catch (err) {
-							if (err.name !== "AbortError") console.error("Follow-up chat failed", err);
-						} finally {
-							setIsStreaming(false);
-							setAbortController(null);
-						}
-					}, 50);
-					return [...prev, {
-						role: "assistant",
-						text: data.insight,
-						isReport: true
-					}];
-				});
+				setMessages((prev) => [...prev, {
+					role: "assistant",
+					text: data.professional_report || data.gpt_analysis || data.insight,
+					isReport: true
+				}]);
 				setFile(null);
 				setPreviewUrl(null);
 			} catch (err) {
@@ -350,161 +297,244 @@ function ErrorFallback({ error, resetErrorBoundary }) {
 	});
 }
 var AnalysisResults = (0, import_react.memo)(({ result, askInsight, insightLoading }) => {
-	const [showMask, setShowMask] = (0, import_react.useState)(true);
-	const [showRaw, setShowRaw] = (0, import_react.useState)(false);
-	return /* @__PURE__ */ (0, import_jsx_runtime.jsx)(m, {
+	const [isDownloading, setIsDownloading] = (0, import_react.useState)(false);
+	const [isFullscreen, setIsFullscreen] = (0, import_react.useState)(false);
+	const htmlContent = result.professional_report || "<p>No unified report available.</p>";
+	const downloadReport = async () => {
+		setIsDownloading(true);
+		try {
+			const blob = new Blob([htmlContent], { type: "text/html" });
+			const url = window.URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = url;
+			a.download = `Orionix_Geospatial_Intelligence_Report_${(/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-")}.html`;
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			window.URL.revokeObjectURL(url);
+		} catch (err) {
+			console.error("Report Download error", err);
+			alert("Failed to download HTML report");
+		} finally {
+			setIsDownloading(false);
+		}
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(m, {
 		FallbackComponent: ErrorFallback,
-		onReset: () => {
-			setShowMask(true);
-		},
-		children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "cb-report-card nova-reveal nova-in",
+		children: [isFullscreen && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			style: {
+				position: "fixed",
+				top: 0,
+				left: 0,
+				width: "100vw",
+				height: "100vh",
+				backgroundColor: "#0f1115",
+				zIndex: 9999,
+				display: "flex",
+				flexDirection: "column",
+				padding: "20px",
+				boxSizing: "border-box"
+			},
+			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				style: {
+					display: "flex",
+					justifyContent: "space-between",
+					alignItems: "center",
+					marginBottom: "15px"
+				},
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+					style: {
+						margin: 0,
+						color: "#f8fafc",
+						fontSize: "1.25rem",
+						fontFamily: "Space Mono, monospace"
+					},
+					children: "Orionix Unified Report"
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					style: {
+						display: "flex",
+						gap: "10px"
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						className: "cb-attach-btn",
+						onClick: downloadReport,
+						disabled: isDownloading,
+						style: { height: "36px" },
+						children: isDownloading ? "Generating..." : "📄 Download HTML"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						className: "cb-attach-btn",
+						style: {
+							background: "#7f1d1d",
+							borderColor: "#ef4444",
+							color: "#fca5a5",
+							height: "36px"
+						},
+						onClick: () => setIsFullscreen(false),
+						children: "✕ Close Fullscreen"
+					})]
+				})]
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				style: {
+					flex: 1,
+					borderRadius: "12px",
+					overflow: "hidden",
+					border: "1px solid #334155"
+				},
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("iframe", {
+					srcDoc: htmlContent,
+					style: {
+						width: "100%",
+						height: "100%",
+						border: "none",
+						background: "#0f1115"
+					},
+					title: "Unified HTML Report Fullscreen"
+				})
+			})]
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "cb-report-card orionix-reveal orionix-in",
+			style: {
+				padding: "10px",
+				width: "100%",
+				maxWidth: "1200px",
+				margin: "0 auto"
+			},
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "cb-report-header",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", { children: "Earth Observation Report" }), result.risk_level && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
-						className: `cb-risk-badge ${result.risk_level.toLowerCase()}`,
-						children: ["RISK: ", result.risk_level.toUpperCase()]
+					style: {
+						display: "flex",
+						justifyContent: "flex-end",
+						marginBottom: "10px",
+						gap: "10px"
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						className: "cb-attach-btn",
+						onClick: () => setIsFullscreen(true),
+						style: {
+							fontSize: "13px",
+							padding: "8px 16px",
+							display: "flex",
+							alignItems: "center",
+							gap: "8px"
+						},
+						children: "🔍 Toggle Fullscreen"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						className: "cb-attach-btn",
+						onClick: downloadReport,
+						disabled: isDownloading,
+						style: {
+							fontSize: "13px",
+							padding: "8px 16px",
+							display: "flex",
+							alignItems: "center",
+							gap: "8px"
+						},
+						children: isDownloading ? "Generating..." : "📄 Download Report (HTML)"
 					})]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("hr", { className: "cb-divider" }),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "cb-report-section",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
-						className: "cb-section-title",
-						children: "Telemetry & Context"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "cb-eo-panel",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "cb-eo-grid",
-							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "cb-eo-item",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "cb-eo-label",
-										children: "Scene Type"
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "cb-eo-value",
-										children: result.scene_type || "Urban / Natural"
-									})]
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "cb-eo-item",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "cb-eo-label",
-										children: "Resolution"
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "cb-eo-value",
-										children: result.width && result.height ? `${result.width}x${result.height}` : "High"
-									})]
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "cb-eo-item",
-									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "cb-eo-label",
-										children: "Projection"
-									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-										className: "cb-eo-value",
-										children: result.geo_metadata?.crs ? String(result.geo_metadata.crs) : "EPSG:4326"
-									})]
-								})
-							]
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-							className: "cb-eo-flags",
-							children: result.flags?.map((f, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "cb-eo-match-row",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", { children: [
-									f.icon,
-									" ",
-									f.label
-								] }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-									className: "cb-eo-match-score",
-									children: "DETECTED"
-								})]
-							}, idx))
-						})]
-					})]
-				}),
-				result.mask_image && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "cb-report-section",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
-						className: "cb-section-title",
-						children: "Segmentation Map"
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "cb-report-image-container",
-						children: [showMask && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-							src: `data:image/png;base64,${result.mask_image}`,
-							alt: "Mask Overlay",
-							className: "cb-mask-overlay",
-							style: {
-								opacity: 1,
-								mixBlendMode: "normal"
-							}
-						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							className: "cb-mask-toggle",
-							onClick: () => setShowMask(!showMask),
-							children: showMask ? "Hide SegMap" : "Show SegMap"
-						})]
-					})]
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					style: {
+						width: "100%",
+						height: "800px",
+						borderRadius: "16px",
+						overflow: "hidden",
+						border: "1px solid #334155"
+					},
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("iframe", {
+						srcDoc: htmlContent,
+						style: {
+							width: "100%",
+							height: "100%",
+							border: "none"
+						},
+						title: "Unified HTML Report"
+					})
 				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "cb-report-section",
+					className: "dashboard-section",
+					style: {
+						marginTop: "24px",
+						paddingTop: "16px",
+						borderTop: "1px solid var(--border)"
+					},
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", {
 							className: "cb-section-title",
-							children: "Quick EO Insights"
+							style: {
+								fontSize: "0.85rem",
+								textTransform: "uppercase",
+								letterSpacing: "0.05em",
+								color: "var(--muted)",
+								margin: "0 0 12px",
+								fontFamily: "Space Mono, monospace"
+							},
+							children: "💬 Quick AI Questions"
 						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "cb-insights-grid",
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							style: {
+								display: "flex",
+								flexWrap: "wrap",
+								gap: "10px"
+							},
 							children: [
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									disabled: insightLoading,
-									onClick: () => askInsight("What does this landscape primarily represent?"),
-									children: "🌱 What does this landscape primarily represent?"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									disabled: insightLoading,
-									onClick: () => askInsight("What environmental characteristics can be inferred?"),
-									children: "🌿 What environmental characteristics can be inferred?"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									disabled: insightLoading,
-									onClick: () => askInsight("Is there evidence of residential or industrial development?"),
-									children: "🏗 Is there evidence of residential or industrial development?"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									disabled: insightLoading,
-									onClick: () => askInsight("Are there any visible environmental risks?"),
-									children: "⚠ Are there any visible environmental risks?"
-								}),
-								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-									disabled: insightLoading,
-									onClick: () => askInsight("What are the key observations?"),
-									children: "🎯 What are the key observations?"
-								})
-							]
+								{
+									label: "🌱 Explain the environment",
+									q: "Explain the environment"
+								},
+								{
+									label: "🏗 Analyze infrastructure",
+									q: "Analyze infrastructure"
+								},
+								{
+									label: "⚠ Assess possible risks",
+									q: "Assess possible risks"
+								},
+								{
+									label: "📈 Future land use",
+									q: "Future land use"
+								},
+								{
+									label: "🧠 Explain like I'm 10",
+									q: "Explain like I'm 10"
+								}
+							].map((btn, idx) => /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+								className: "cb-attach-btn",
+								disabled: insightLoading,
+								onClick: () => askInsight(btn.q),
+								style: {
+									fontSize: "13px",
+									padding: "8px 16px",
+									height: "auto",
+									display: "flex",
+									alignItems: "center"
+								},
+								children: btn.label
+							}, idx))
 						}),
 						insightLoading && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "cb-insight-loading",
-							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "cb-dot small pulse" }), " Generating Insight..."]
+							style: {
+								marginTop: "12px",
+								fontSize: "0.9rem",
+								color: "var(--muted)",
+								display: "flex",
+								alignItems: "center",
+								gap: "8px"
+							},
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "cb-dot small pulse",
+								style: {
+									width: "6px",
+									height: "6px",
+									borderRadius: "50%",
+									background: "var(--aurora)"
+								}
+							}), " Generating Insight..."]
 						})
 					]
-				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "cb-report-section",
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("details", {
-						className: "cb-raw-json",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("summary", {
-							onClick: (e) => {
-								e.preventDefault();
-								setShowRaw(!showRaw);
-							},
-							children: showRaw ? "Hide Raw JSON" : "Show Raw JSON"
-						}), showRaw && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("pre", { children: JSON.stringify(result, null, 2) })]
-					})
 				})
 			]
-		})
+		})]
 	});
 });
 AnalysisResults.displayName = "AnalysisResults";
@@ -529,7 +559,7 @@ var ChatInterface = (0, import_react.memo)(({ messages, status, stageIndex, resu
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "cb-chat-container",
 		children: [messages.length === 0 && status === "idle" && !showHistory ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "cb-welcome nova-reveal nova-in",
+			className: "cb-welcome orionix-reveal orionix-in",
 			children: [
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "cb-hero-orb orb1" }),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "cb-hero-orb orb2" }),
@@ -570,6 +600,26 @@ var ChatInterface = (0, import_react.memo)(({ messages, status, stageIndex, resu
 								className: "sg-text",
 								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Agriculture" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Analyze crop vitality" })]
 							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: () => setChatInput("Analyze road networks, buildings, and industrial infrastructure in the scene."),
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "sg-icon",
+								children: "🏗️"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "sg-text",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Infrastructure" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Map built-up zones" })]
+							})]
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
+							onClick: () => setChatInput("Assess possible geological, flooding, or environmental hazards in the area."),
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+								className: "sg-icon",
+								children: "⚠️"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "sg-text",
+								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h4", { children: "Risk Assessment" }), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: "Identify hazards" })]
+							})]
 						})
 					]
 				})
@@ -578,7 +628,7 @@ var ChatInterface = (0, import_react.memo)(({ messages, status, stageIndex, resu
 			className: "cb-chat-history",
 			children: [
 				messages.map((m, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: `cb-msg-wrapper ${m.role}`,
+					className: `cb-msg-wrapper ${m.role} ${m.isReport ? "report-msg" : ""}`,
 					children: [m.role === "assistant" && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "cb-msg-avatar",
 						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "cb-dot small" })
@@ -592,11 +642,11 @@ var ChatInterface = (0, import_react.memo)(({ messages, status, stageIndex, resu
 						}), m.role === "user" ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "cb-msg-text",
 							children: m.text
-						}) : m.isReport && result ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnalysisResults, {
+						}) : m.isReport && result ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_jsx_runtime.Fragment, { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(AnalysisResults, {
 							result,
 							askInsight,
 							insightLoading
-						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						}) }) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "cb-markdown",
 							children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Markdown, {
 								remarkPlugins: [remarkGfm],
@@ -638,7 +688,26 @@ var ChatInterface = (0, import_react.memo)(({ messages, status, stageIndex, resu
 						})
 					]
 				}),
-				!(result && !file) && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				result && !file && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					style: {
+						display: "flex",
+						justifyContent: "center",
+						marginBottom: "8px"
+					},
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
+						className: "cb-attach-btn",
+						style: {
+							background: "var(--card)",
+							border: "1px solid var(--border)",
+							fontSize: "12px",
+							padding: "6px 12px",
+							height: "32px"
+						},
+						onClick: handleResetChat,
+						children: "🔄 Start New Analysis"
+					})
+				}),
+				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "cb-input-box",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("button", {
@@ -681,42 +750,29 @@ var ChatInterface = (0, import_react.memo)(({ messages, status, stageIndex, resu
 						})
 					]
 				}),
-				result && !file && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					className: "cb-input-box",
-					style: {
-						justifyContent: "center",
-						background: "transparent",
-						border: "none",
-						boxShadow: "none"
-					},
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-						className: "cb-attach-btn",
-						style: {
-							background: "var(--card)",
-							border: "1px solid var(--border)"
-						},
-						onClick: handleResetChat,
-						children: "🔄 Start New Analysis"
-					})
-				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "cb-footer-text",
-					children: "NOVA AI can make mistakes. Verify critical intelligence."
+					children: "Orionix can make mistakes. Verify critical intelligence."
 				})
 			]
 		})]
 	});
 });
 ChatInterface.displayName = "ChatInterface";
-function NovaDemo() {
+function OrionixDemo() {
 	const { file, previewUrl, status, stageIndex, result, error, messages, sessions, isStreaming, handleFile, handleReset, restoreSession, runAnalysis, askInsight, insightLoading, abortRequest } = useAnalysis();
 	const [chatInput, setChatInput] = (0, import_react.useState)("");
 	const [showHistory, setShowHistory] = (0, import_react.useState)(false);
 	const handleSubmit = () => {
 		const prompt = chatInput.trim();
 		if (!prompt && !file) return;
-		if (file && status !== "running") runAnalysis(prompt);
-		else if (result && status !== "running") askInsight(prompt);
+		if (file && status !== "running") {
+			runAnalysis(prompt);
+			setChatInput("");
+		} else if (result && status !== "running") {
+			askInsight(prompt);
+			setChatInput("");
+		}
 	};
 	const handleResetChat = () => {
 		handleReset();
@@ -725,104 +781,100 @@ function NovaDemo() {
 	};
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "cb-root",
-		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { id: "stars" }), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-			className: "cb-layout",
-			children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("aside", {
-				className: "cb-sidebar",
-				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "cb-sidebar-top",
-					children: [
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							className: `cb-sidebar-btn ${!showHistory ? "active" : ""}`,
-							title: "New Chat",
-							onClick: handleResetChat,
-							children: "✨"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							className: `cb-sidebar-btn ${showHistory ? "active" : ""}`,
-							title: "History",
-							onClick: () => setShowHistory(true),
-							children: "📜"
-						}),
-						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("button", {
-							className: "cb-sidebar-btn",
-							title: "Saved Reports",
-							children: "📁"
-						})
-					]
-				})
-			}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("main", {
-				className: "cb-main",
-				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("header", {
-					className: "cb-header",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Link, {
-						to: "/",
-						className: "cb-logo-text",
-						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "cb-dot" }), "NOVA AI"]
-					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
-						to: "/",
-						className: "cb-back-link",
-						children: "← Back to overview"
-					})]
-				}), showHistory ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "cb-history-view",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
-						className: "cb-history-title",
-						children: "Session History"
-					}), sessions.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "cb-history-empty",
-						children: "No past sessions found."
-					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "cb-history-list",
-						children: sessions.map((s) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "cb-history-card",
-							onClick: () => {
-								restoreSession(s);
-								setShowHistory(false);
-							},
-							children: [s.previewUrl && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
-								src: s.previewUrl,
-								alt: "Thumbnail",
-								className: "cb-history-thumb"
-							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "cb-history-info",
-								children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-									className: "cb-history-date",
-									children: s.date.toLocaleString()
-								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-									className: "cb-history-desc",
-									children: [s.result?.insight?.slice(0, 60) || s.messages[0]?.text?.slice(0, 60) || "Unfinished Session", "..."]
-								})]
-							})]
-						}, s.id))
-					})]
-				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-					style: { padding: "0 24px" },
-					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "cb-input-error",
-						children: error
+		style: { paddingTop: "80px" },
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { id: "stars" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
+				className: "orionix-nav",
+				children: [
+					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "orionix-logo",
+						children: [
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "orionix-dot" }),
+							"Orionix",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "orionix-live",
+								children: "● LIVE"
+							})
+						]
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("ul", {
+						className: "orionix-links",
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Link, {
+							to: "/",
+							children: "Home"
+						}) })
+					}),
+					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						className: "orionix-tag",
+						children: "SIH25170"
 					})
-				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChatInterface, {
-					messages,
-					status,
-					stageIndex,
-					result,
-					file,
-					previewUrl,
-					chatInput,
-					setChatInput,
-					handleSubmit,
-					handleFile,
-					isStreaming,
-					abortRequest,
-					showHistory,
-					askInsight,
-					insightLoading,
-					handleResetChat
-				})] })]
-			})]
-		})]
+				]
+			}),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "cb-layout",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("main", {
+					className: "cb-main",
+					children: showHistory ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						className: "cb-history-view",
+						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", {
+							className: "cb-history-title",
+							children: "Session History"
+						}), sessions.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "cb-history-empty",
+							children: "No past sessions found."
+						}) : /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "cb-history-list",
+							children: sessions.map((s) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "cb-history-card",
+								onClick: () => {
+									restoreSession(s);
+									setShowHistory(false);
+								},
+								children: [s.previewUrl && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("img", {
+									src: s.previewUrl,
+									alt: "Thumbnail",
+									className: "cb-history-thumb"
+								}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+									className: "cb-history-info",
+									children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+										className: "cb-history-date",
+										children: s.date.toLocaleString()
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+										className: "cb-history-desc",
+										children: [s.result?.insight?.slice(0, 60) || s.messages[0]?.text?.slice(0, 60) || "Unfinished Session", "..."]
+									})]
+								})]
+							}, s.id))
+						})]
+					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [error && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+						style: { padding: "0 24px" },
+						children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "cb-input-error",
+							children: error
+						})
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)(ChatInterface, {
+						messages,
+						status,
+						stageIndex,
+						result,
+						file,
+						previewUrl,
+						chatInput,
+						setChatInput,
+						handleSubmit,
+						handleFile,
+						isStreaming,
+						abortRequest,
+						showHistory,
+						askInsight,
+						insightLoading,
+						handleResetChat
+					})] })
+				})
+			})
+		]
 	});
 }
 //#endregion
-export { NovaDemo as component };
+export { OrionixDemo as component };

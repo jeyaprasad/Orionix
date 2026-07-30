@@ -1,12 +1,12 @@
-# Nova Ai
+# Orionix
 
-Nova Ai is a multimodal AI assistant capable of analyzing Earth Observation satellite images using RemoteCLIP and GPT-OSS (OpenRouter).
+Orionix is a multimodal AI assistant capable of analyzing Earth Observation satellite images using RemoteCLIP and GPT-OSS (OpenRouter).
 
 ## Setup Instructions
 
 ### Backend
 1. Python 3.9+ is recommended.
-2. Navigate to the root directory `Nova Ai/`.
+2. Navigate to the root directory `Orionix/`.
 3. Create a virtual environment and activate it:
    ```bash
    python -m venv venv
@@ -22,7 +22,7 @@ Nova Ai is a multimodal AI assistant capable of analyzing Earth Observation sate
    ```bash
    python -m uvicorn backend.main:app --reload --port 8000
    ```
-   Or `uvicorn backend.main:app --reload` from `Nova Ai/` directory.
+   Or `uvicorn backend.main:app --reload` from `Orionix/` directory.
 
 ### Frontend
 1. Navigate to `frontend/`.

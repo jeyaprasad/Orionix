@@ -204,7 +204,7 @@ function App() {
             {/* HEADER SECTION */}
             <header className="header">
                 <div className="brand-title">
-                    NovaAI
+                    Orionix
                     <span className="brand-badge">Satellite Analyst</span>
                 </div>
                 <p className="subtitle">

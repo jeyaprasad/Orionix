@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import "./index.css";
 
 export const Route = createFileRoute("/")({
-  component: NovaLanding,
+  component: OrionixLanding,
 });
 
 const flow = [
@@ -37,7 +37,7 @@ const tech = [
 
 const marquee = ["PyTorch", "RemoteCLIP", "OpenRouter", "FastAPI", "React", "Zero-Shot", "Earth Observation", "ISRO EO", "Vite", "Pydantic"];
 
-function NovaLanding() {
+function OrionixLanding() {
   const progressRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -47,7 +47,7 @@ function NovaLanding() {
       const frag = document.createDocumentFragment();
       for (let i = 0; i < 150; i++) {
         const star = document.createElement("div");
-        star.className = "nova-star";
+        star.className = "orionix-star";
         const size = Math.random() * 2.5 + 0.5;
         star.style.width = `${size}px`;
         star.style.height = `${size}px`;
@@ -81,14 +81,14 @@ function NovaLanding() {
       (entries) => {
         entries.forEach((e) => {
           if (e.isIntersecting) {
-            (e.target as HTMLElement).classList.add("nova-in");
+            (e.target as HTMLElement).classList.add("orionix-in");
             io.unobserve(e.target);
           }
         });
       },
       { threshold: 0.12 }
     );
-    document.querySelectorAll(".nova-reveal").forEach((el) => io.observe(el));
+    document.querySelectorAll(".orionix-reveal").forEach((el) => io.observe(el));
 
     // Cursor spotlight on cards - OPTIMIZED
     let rafId: number;
@@ -110,25 +110,25 @@ function NovaLanding() {
   }, []);
 
   return (
-    <div className="nova-root">
-      <div className="nova-progress" ref={progressRef} />
+    <div className="orionix-root">
+      <div className="orionix-progress" ref={progressRef} />
 
       <div id="stars" />
-      <div className="nova-grid-overlay" />
-      <div className="nova-grain" />
+      <div className="orionix-grid-overlay" />
+      <div className="orionix-grain" />
 
-      <nav className="nova-nav">
-        <div className="nova-logo">
-          <div className="nova-dot" />
-          NOVA AI
-          <span className="nova-live">● LIVE</span>
+      <nav className="orionix-nav">
+        <div className="orionix-logo">
+          <div className="orionix-dot" />
+          Orionix
+          <span className="orionix-live">● LIVE</span>
         </div>
-        <ul className="nova-links">
+        <ul className="orionix-links">
           <li><a href="#solution" onClick={(e) => { e.preventDefault(); document.getElementById('solution')?.scrollIntoView({ behavior: 'smooth' }); }}>How it Works</a></li>
           <li><a href="#landcover" onClick={(e) => { e.preventDefault(); document.getElementById('landcover')?.scrollIntoView({ behavior: 'smooth' }); }}>Land Cover</a></li>
           <li><Link to="/aichat">Try Demo</Link></li>
         </ul>
-        <div className="nova-tag">SIH25170</div>
+        <div className="orionix-tag">SIH25170</div>
       </nav>
 
       <section id="hero">
@@ -136,7 +136,7 @@ function NovaLanding() {
         <div className="hero-orb orb2" />
         <div className="hero-orb orb3" />
         <div className="hero-inner">
-          <div className="nova-reveal">
+          <div className="orionix-reveal">
             <div className="hero-eyebrow">Where Space Meets AI</div>
             <h1>
               Turn satellite imagery into a<br />
@@ -155,7 +155,7 @@ function NovaLanding() {
             </div>
           </div>
 
-          <div className="hero-visual nova-reveal">
+          <div className="hero-visual orionix-reveal">
             <svg className="orbit-svg" viewBox="0 0 520 520" aria-hidden>
               <defs>
                 <radialGradient id="glow" cx="50%" cy="50%" r="50%">
@@ -210,8 +210,8 @@ function NovaLanding() {
 
       <section id="solution">
         <div className="container">
-          <div className="section-header nova-reveal">
-            <div className="section-eyebrow">How NOVA AI Works</div>
+          <div className="section-header orionix-reveal">
+            <div className="section-eyebrow">How Orionix Works</div>
             <h2>From raw image to clear insight</h2>
             <p className="section-sub">
               A five-stage pipeline combining zero-shot computer vision and large language models to translate satellite imagery into human-readable intelligence.
@@ -219,7 +219,7 @@ function NovaLanding() {
           </div>
           <div className="flow">
             {flow.map((s, i) => (
-              <div key={s.n} className="flow-step nova-spot nova-reveal" style={{ transitionDelay: `${i * 100}ms` }}>
+              <div key={s.n} className="flow-step orionix-spot orionix-reveal" style={{ transitionDelay: `${i * 100}ms` }}>
                 <div className="step-num">{s.n}</div>
                 <div className="step-icon">{s.icon}</div>
                 <div className="step-title">{s.title}</div>
@@ -227,7 +227,7 @@ function NovaLanding() {
               </div>
             ))}
           </div>
-          <p className="nova-reveal" style={{ textAlign: "center", color: "var(--aurora)", marginTop: "40px", fontSize: "0.95rem" }}>
+          <p className="orionix-reveal" style={{ textAlign: "center", color: "var(--aurora)", marginTop: "40px", fontSize: "0.95rem" }}>
             The language model never sees the image — it receives only validated, structured findings, which is what prevents fabricated observations.
           </p>
         </div>
@@ -237,7 +237,7 @@ function NovaLanding() {
 
       <section id="landcover">
         <div className="container">
-          <div className="section-header nova-reveal">
+          <div className="section-header orionix-reveal">
             <div className="section-eyebrow">Zero-Shot Capabilities</div>
             <h2>Supported Land Cover Types</h2>
             <p className="section-sub">
@@ -246,7 +246,7 @@ function NovaLanding() {
           </div>
           <div className="landcover-grid">
             {landCoverTypes.map((type, i) => (
-              <div key={type.name} className="landcover-card nova-spot nova-reveal" style={{ transitionDelay: `${(i % 4) * 60}ms` }}>
+              <div key={type.name} className="landcover-card orionix-spot orionix-reveal" style={{ transitionDelay: `${(i % 4) * 60}ms` }}>
                 <div className="lc-dot" style={{ backgroundColor: type.color }} />
                 <div className="lc-name">{type.name}</div>
               </div>
@@ -259,12 +259,12 @@ function NovaLanding() {
 
       <section id="sample">
         <div className="container">
-          <div className="section-header nova-reveal">
+          <div className="section-header orionix-reveal">
             <div className="section-eyebrow">Sample Output</div>
             <h2>Analysis & Limitations</h2>
           </div>
-          <div className="sample-flex nova-reveal">
-            <div className="sample-card nova-spot">
+          <div className="sample-flex orionix-reveal">
+            <div className="sample-card orionix-spot">
               <div className="sc-header">
                 <div>
                   <h3 className="sc-title">Forest Scene Analysis</h3>
@@ -310,13 +310,13 @@ function NovaLanding() {
 
       <section id="tech">
         <div className="container">
-          <div className="section-header nova-reveal">
+          <div className="section-header orionix-reveal">
             <div className="section-eyebrow">Under The Hood</div>
             <h2>Technologies Used</h2>
           </div>
           <div className="tech-grid">
             {tech.map((t, i) => (
-              <div key={t.label} className="tech-card nova-spot nova-reveal" style={{ transitionDelay: `${i * 60}ms` }}>
+              <div key={t.label} className="tech-card orionix-spot orionix-reveal" style={{ transitionDelay: `${i * 60}ms` }}>
                 <div className="tech-label">{t.label}</div>
                 <div className="tech-title">{t.title}</div>
                 <div className="tech-tags">
@@ -333,7 +333,7 @@ function NovaLanding() {
       <div className="divider" />
       
       <section id="cta" style={{ padding: "100px 20px", textAlign: "center", background: "var(--deep)" }}>
-         <div className="nova-reveal">
+         <div className="orionix-reveal">
             <h2>Start analyzing imagery instantly.</h2>
             <p className="section-sub" style={{ marginBottom: "40px", margin: "14px auto 40px auto", maxWidth: "500px" }}>No setup required. Experience zero-shot classification directly in your browser.</p>
             <Link to="/aichat" className="btn btn-primary" style={{ padding: "16px 40px", fontSize: "1.1rem" }}>
@@ -343,7 +343,7 @@ function NovaLanding() {
       </section>
 
       <footer>
-        <span>NOVA AI</span> · Team Yakuzas · SIH25170 · Where Space Meets AI
+        <span>Orionix</span> · Team Yakuzas · SIH25170 · Where Space Meets AI
       </footer>
     </div>
   );

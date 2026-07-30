@@ -20,7 +20,7 @@ class OpenRouterClient(BaseLLMProvider):
             timeout=30.0,
             default_headers={
                 "HTTP-Referer": "http://localhost:8000",
-                "X-Title": "Nova Ai"
+                "X-Title": "Orionix"
             }
         )
 

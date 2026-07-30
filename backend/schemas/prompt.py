@@ -85,7 +85,7 @@ class PromptPayload(BaseModel):
         ]
     """
     system_prompt: str = Field(
-        ..., description="GPT system role prompt defining NovaAI's persona and constraints."
+        ..., description="GPT system role prompt defining Orionix's persona and constraints."
     )
     user_prompt: str = Field(
         ..., description="GPT user message containing EO context and analysis instructions."

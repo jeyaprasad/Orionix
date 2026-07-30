@@ -31,7 +31,7 @@ export const AnalysisResults = memo(({ result, askInsight, insightLoading }: Ana
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `NovaAI_Geospatial_Intelligence_Report_${new Date().toISOString().replace(/[:.]/g, "-")}.html`;
+      a.download = `Orionix_Geospatial_Intelligence_Report_${new Date().toISOString().replace(/[:.]/g, "-")}.html`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
@@ -61,7 +61,7 @@ export const AnalysisResults = memo(({ result, askInsight, insightLoading }: Ana
           boxSizing: 'border-box'
         }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-            <h2 style={{ margin: 0, color: '#f8fafc', fontSize: '1.25rem', fontFamily: 'Space Mono, monospace' }}>NovaAI Unified Report</h2>
+            <h2 style={{ margin: 0, color: '#f8fafc', fontSize: '1.25rem', fontFamily: 'Space Mono, monospace' }}>Orionix Unified Report</h2>
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 className="cb-attach-btn"
@@ -90,7 +90,7 @@ export const AnalysisResults = memo(({ result, askInsight, insightLoading }: Ana
         </div>
       )}
 
-      <div className="cb-report-card nova-reveal nova-in" style={{ padding: "10px", width: "100%", maxWidth: "1200px", margin: "0 auto" }}>
+      <div className="cb-report-card orionix-reveal orionix-in" style={{ padding: "10px", width: "100%", maxWidth: "1200px", margin: "0 auto" }}>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', gap: '10px' }}>
           <button

@@ -62,7 +62,7 @@ export const ChatInterface = memo(({
   return (
     <div className="cb-chat-container">
       {messages.length === 0 && status === "idle" && !showHistory ? (
-        <div className="cb-welcome nova-reveal nova-in">
+        <div className="cb-welcome orionix-reveal orionix-in">
           <div className="cb-hero-orb orb1"></div>
           <div className="cb-hero-orb orb2"></div>
           <h2>Analyze Satellite Imagery</h2>
@@ -203,7 +203,7 @@ export const ChatInterface = memo(({
             )}
           </div>
           <div className="cb-footer-text">
-            NOVA AI can make mistakes. Verify critical intelligence.
+            Orionix can make mistakes. Verify critical intelligence.
           </div>
         </div>
       )}

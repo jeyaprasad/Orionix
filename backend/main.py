@@ -11,7 +11,7 @@ from backend.api.insights import router as insights_router
 from backend.api.report import router as report_router
 
 app = FastAPI(
-    title="Nova Ai API",
+    title="Orionix API",
     version="1.0.0"
 )
 
@@ -33,7 +33,7 @@ app.include_router(report_router)
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info(f"Starting up Nova Ai API. Model: {settings.MODEL_NAME}")
+    logger.info(f"Starting up Orionix API. Model: {settings.MODEL_NAME}")
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):

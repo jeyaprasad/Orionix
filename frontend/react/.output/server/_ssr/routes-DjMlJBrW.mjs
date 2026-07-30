@@ -1,8 +1,8 @@
 import { a as __toESM } from "../_runtime.mjs";
 import { n as require_jsx_runtime, r as require_react } from "../_libs/react+tanstack__react-query.mjs";
 import { h as Link } from "../_libs/@tanstack/react-router+[...].mjs";
-import "./router-BjfSz_WH.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/routes-DAFcNEq_.js
+import "./router-CfTm7ec8.mjs";
+//#region node_modules/.nitro/vite/services/ssr/assets/routes-DjMlJBrW.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var flow = [
@@ -133,7 +133,7 @@ var marquee = [
 	"Vite",
 	"Pydantic"
 ];
-function NovaLanding() {
+function OrionixLanding() {
 	const progressRef = (0, import_react.useRef)(null);
 	(0, import_react.useEffect)(() => {
 		const container = document.getElementById("stars");
@@ -141,7 +141,7 @@ function NovaLanding() {
 			const frag = document.createDocumentFragment();
 			for (let i = 0; i < 150; i++) {
 				const star = document.createElement("div");
-				star.className = "nova-star";
+				star.className = "orionix-star";
 				const size = Math.random() * 2.5 + .5;
 				star.style.width = `${size}px`;
 				star.style.height = `${size}px`;
@@ -170,12 +170,12 @@ function NovaLanding() {
 		const io = new IntersectionObserver((entries) => {
 			entries.forEach((e) => {
 				if (e.isIntersecting) {
-					e.target.classList.add("nova-in");
+					e.target.classList.add("orionix-in");
 					io.unobserve(e.target);
 				}
 			});
 		}, { threshold: .12 });
-		document.querySelectorAll(".nova-reveal").forEach((el) => io.observe(el));
+		document.querySelectorAll(".orionix-reveal").forEach((el) => io.observe(el));
 		let rafId;
 		const onMoveRoot = (e) => {
 			if (rafId) cancelAnimationFrame(rafId);
@@ -193,31 +193,31 @@ function NovaLanding() {
 		};
 	}, []);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-		className: "nova-root",
+		className: "orionix-root",
 		children: [
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				className: "nova-progress",
+				className: "orionix-progress",
 				ref: progressRef
 			}),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { id: "stars" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nova-grid-overlay" }),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nova-grain" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "orionix-grid-overlay" }),
+			/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "orionix-grain" }),
 			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("nav", {
-				className: "nova-nav",
+				className: "orionix-nav",
 				children: [
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "nova-logo",
+						className: "orionix-logo",
 						children: [
-							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "nova-dot" }),
-							"NOVA AI",
+							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { className: "orionix-dot" }),
+							"Orionix",
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
-								className: "nova-live",
+								className: "orionix-live",
 								children: "● LIVE"
 							})
 						]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("ul", {
-						className: "nova-links",
+						className: "orionix-links",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("li", { children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("a", {
 								href: "#solution",
@@ -242,7 +242,7 @@ function NovaLanding() {
 						]
 					}),
 					/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-						className: "nova-tag",
+						className: "orionix-tag",
 						children: "SIH25170"
 					})
 				]
@@ -256,7 +256,7 @@ function NovaLanding() {
 					/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 						className: "hero-inner",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "nova-reveal",
+							className: "orionix-reveal",
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 									className: "hero-eyebrow",
@@ -287,7 +287,7 @@ function NovaLanding() {
 								})
 							]
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "hero-visual nova-reveal",
+							className: "hero-visual orionix-reveal",
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("svg", {
 									className: "orbit-svg",
@@ -402,11 +402,11 @@ function NovaLanding() {
 					className: "container",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "section-header nova-reveal",
+							className: "section-header orionix-reveal",
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 									className: "section-eyebrow",
-									children: "How NOVA AI Works"
+									children: "How Orionix Works"
 								}),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "From raw image to clear insight" }),
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
@@ -418,7 +418,7 @@ function NovaLanding() {
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "flow",
 							children: flow.map((s, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-								className: "flow-step nova-spot nova-reveal",
+								className: "flow-step orionix-spot orionix-reveal",
 								style: { transitionDelay: `${i * 100}ms` },
 								children: [
 									/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -441,7 +441,7 @@ function NovaLanding() {
 							}, s.n))
 						}),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
-							className: "nova-reveal",
+							className: "orionix-reveal",
 							style: {
 								textAlign: "center",
 								color: "var(--aurora)",
@@ -459,7 +459,7 @@ function NovaLanding() {
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "container",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "section-header nova-reveal",
+						className: "section-header orionix-reveal",
 						children: [
 							/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "section-eyebrow",
@@ -474,7 +474,7 @@ function NovaLanding() {
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "landcover-grid",
 						children: landCoverTypes.map((type, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "landcover-card nova-spot nova-reveal",
+							className: "landcover-card orionix-spot orionix-reveal",
 							style: { transitionDelay: `${i % 4 * 60}ms` },
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 								className: "lc-dot",
@@ -493,15 +493,15 @@ function NovaLanding() {
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "container",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "section-header nova-reveal",
+						className: "section-header orionix-reveal",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "section-eyebrow",
 							children: "Sample Output"
 						}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "Analysis & Limitations" })]
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "sample-flex nova-reveal",
+						className: "sample-flex orionix-reveal",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "sample-card nova-spot",
+							className: "sample-card orionix-spot",
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 									className: "sc-header",
@@ -574,7 +574,7 @@ function NovaLanding() {
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "container",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-						className: "section-header nova-reveal",
+						className: "section-header orionix-reveal",
 						children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 							className: "section-eyebrow",
 							children: "Under The Hood"
@@ -582,7 +582,7 @@ function NovaLanding() {
 					}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "tech-grid",
 						children: tech.map((t, i) => /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-							className: "tech-card nova-spot nova-reveal",
+							className: "tech-card orionix-spot orionix-reveal",
 							style: { transitionDelay: `${i * 60}ms` },
 							children: [
 								/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
@@ -614,7 +614,7 @@ function NovaLanding() {
 					background: "var(--deep)"
 				},
 				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
-					className: "nova-reveal",
+					className: "orionix-reveal",
 					children: [
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h2", { children: "Start analyzing imagery instantly." }),
 						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
@@ -638,9 +638,9 @@ function NovaLanding() {
 					]
 				})
 			}),
-			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "NOVA AI" }), " · Team Yakuzas · SIH25170 · Where Space Meets AI"] })
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("footer", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", { children: "Orionix" }), " · Team Yakuzas · SIH25170 · Where Space Meets AI"] })
 		]
 	});
 }
 //#endregion
-export { NovaLanding as component };
+export { OrionixLanding as component };

@@ -1,7 +1,7 @@
 """
 templates.py
 ------------
-All raw prompt text for the NovaAI EO analyst persona.
+All raw prompt text for the Orionix EO analyst persona.
 
 Design rules:
   - Every string is a module-level constant. No prompt text exists in logic files.
@@ -16,12 +16,12 @@ Design rules:
 # ---------------------------------------------------------------------------
 # System Prompt — Report Generation
 # ---------------------------------------------------------------------------
-# Defines the NovaAI Senior EO Analyst persona with strict anti-hallucination
+# Defines the Orionix Senior EO Analyst persona with strict anti-hallucination
 # constraints. Reused verbatim for every report generation request.
 # ---------------------------------------------------------------------------
 
 SYSTEM_PROMPT: str = """\
-You are NovaAI — a Senior Earth Observation Analyst specialising in satellite imagery interpretation and land-cover assessment.
+You are Orionix — a Senior Earth Observation Analyst specialising in satellite imagery interpretation and land-cover assessment.
 
 IMPORTANT — what you receive and do NOT receive:
 - You NEVER receive the original satellite image.
@@ -94,7 +94,7 @@ Target length: 250–400 words. Professional, scientific, concise, non-repetitiv
 # ---------------------------------------------------------------------------
 
 QUESTION_SYSTEM_PROMPT: str = """\
-You are NovaAI — a Senior Earth Observation Analyst answering a focused question about a satellite image scene.
+You are Orionix — a Senior Earth Observation Analyst answering a focused question about a satellite image scene.
 
 IMPORTANT — what you receive and do NOT receive:
 - You NEVER receive the original satellite image.
