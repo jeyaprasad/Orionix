@@ -14,7 +14,9 @@ Error surface:
 """
 
 import time
-from fastapi import APIRouter, File, UploadFile, HTTPException, status
+import json
+from fastapi import APIRouter, File, UploadFile, Form, HTTPException, status
+from typing import Optional
 from backend.schemas.analysis import AnalysisResponse
 from backend.services.analysis_service import analysis_service
 from backend.utils.logger import logger
@@ -36,7 +38,12 @@ _MAX_UPLOAD_BYTES = 20 * 1024 * 1024  # 20 MB
         "EO scene interpretation, and a GPT-generated analyst report."
     ),
 )
-async def analyze_image(image: UploadFile = File(...)) -> AnalysisResponse:
+async def analyze_image(
+    image: UploadFile = File(...),
+    latitude: Optional[float] = Form(None),
+    longitude: Optional[float] = Form(None),
+    bbox: Optional[str] = Form(None),
+) -> AnalysisResponse:
     """
     POST /api/analyze — production EO analysis endpoint.
 
@@ -49,6 +56,21 @@ async def analyze_image(image: UploadFile = File(...)) -> AnalysisResponse:
         f"[/api/analyze] Request received. "
         f"Filename: '{image.filename}', Content-Type: {image.content_type}."
     )
+    if latitude is not None and longitude is not None:
+        logger.info(f"[/api/analyze] Selected Location: Lat={latitude}, Lng={longitude}")
+    
+    bbox_list = None
+    if bbox:
+        try:
+            bbox_list = json.loads(bbox)
+            if isinstance(bbox_list, list) and len(bbox_list) == 4:
+                logger.info(f"[/api/analyze] Selected Area Bbox: {bbox_list}")
+            else:
+                logger.warning(f"[/api/analyze] Invalid bbox format (expected list of 4 floats): {bbox}")
+                bbox_list = None
+        except Exception as e:
+            logger.warning(f"[/api/analyze] Failed to parse bbox JSON string: {e}")
+            bbox_list = None
 
     # ------------------------------------------------------------------
     # 1. Read upload stream
@@ -85,6 +107,9 @@ async def analyze_image(image: UploadFile = File(...)) -> AnalysisResponse:
         result = await analysis_service.analyze_image(
             image_bytes=image_bytes,
             filename=image.filename or "upload.jpg",
+            latitude=latitude,
+            longitude=longitude,
+            bbox=bbox_list,
         )
 
     except ValueError as e:

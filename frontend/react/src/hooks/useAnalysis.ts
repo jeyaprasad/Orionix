@@ -71,6 +71,8 @@ export function useAnalysis() {
   const [isStreaming, setIsStreaming] = useState(false);
   const [insightLoading, setInsightLoading] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
+  const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
+  const [bbox, setBbox] = useState<{ minLat: number; minLng: number; maxLat: number; maxLng: number } | null>(null);
 
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
@@ -120,6 +122,8 @@ export function useAnalysis() {
     setMessages([]);
     setFile(null);
     setPreviewUrl(null);
+    setCoordinates(null);
+    setBbox(null);
     setStatus("idle");
     setResult(null);
     setError(null);
@@ -162,6 +166,16 @@ export function useAnalysis() {
     try {
       const formData = new FormData();
       formData.append("image", file, file.name || "image.jpeg");
+      if (coordinates) {
+        formData.append("latitude", coordinates.lat.toString());
+        formData.append("longitude", coordinates.lng.toString());
+      }
+      if (bbox) {
+        formData.append("min_latitude", bbox.minLat.toString());
+        formData.append("min_longitude", bbox.minLng.toString());
+        formData.append("max_latitude", bbox.maxLat.toString());
+        formData.append("max_longitude", bbox.maxLng.toString());
+      }
 
       const controller = new AbortController();
       setAbortController(controller);
@@ -221,7 +235,7 @@ export function useAnalysis() {
       ]);
       setError(friendlyMsg);
     }
-  }, [file]);
+  }, [file, coordinates, bbox]);
 
   const askInsight = useCallback(async (question: string) => {
     if (!question.trim() || !result || insightLoading) return;
@@ -281,6 +295,10 @@ export function useAnalysis() {
     sessions,
     isStreaming,
     insightLoading,
+    coordinates,
+    setCoordinates,
+    bbox,
+    setBbox,
     handleFile,
     handleReset,
     restoreSession,

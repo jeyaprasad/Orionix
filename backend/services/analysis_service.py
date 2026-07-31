@@ -74,6 +74,9 @@ class AnalysisService:
         self,
         image_bytes: bytes,
         filename: str,
+        latitude: Optional[float] = None,
+        longitude: Optional[float] = None,
+        bbox: Optional[list[float]] = None,
     ) -> AnalysisResponse:
         """
         Execute the full EO analysis pipeline on an uploaded image.
@@ -249,6 +252,9 @@ class AnalysisService:
                 "summary": eo_result.summary,
                 "classes": classes,
                 "risk_level": risk_level,
+                "latitude": latitude,
+                "longitude": longitude,
+                "bbox": bbox,
             }
             professional_report = html_renderer.render(mock_resp_data, merged_json, img_b64)
             logger.info("[analyze_image] Stage 6.5: Unified HTML generated successfully.")
@@ -287,6 +293,9 @@ class AnalysisService:
             warning=gpt_warning,
             vegetation_health_score=eo_result.vegetation_health_score,
             vegetation_health_disclaimer=eo_result.vegetation_health_disclaimer,
+            latitude=latitude,
+            longitude=longitude,
+            bbox=bbox,
             # Frontend-compatible fields
             insight=insight,
             classes=classes,
@@ -300,6 +309,9 @@ class AnalysisService:
                 processing_time_ms=round(pipeline_ms, 2),
                 timestamp=datetime.now(timezone.utc).isoformat(),
                 version="1.0",
+                latitude=latitude,
+                longitude=longitude,
+                bbox=bbox,
             ),
         )
 

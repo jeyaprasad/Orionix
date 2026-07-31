@@ -25,37 +25,44 @@ var public_assets_data_default = {
 	"/assets/index-DuJfrJqO.css": {
 		"type": "text/css; charset=utf-8",
 		"etag": "\"7754-9HUN7uFycQZBCvlQ/uqBLhMMayU\"",
-		"mtime": "2026-07-30T15:05:54.465Z",
+		"mtime": "2026-07-31T10:49:44.673Z",
 		"size": 30548,
 		"path": "../public/assets/index-DuJfrJqO.css"
 	},
-	"/assets/routes-D7RghanY.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"3225-BLmZgEzPnBQZz/iaUxAthyicKII\"",
-		"mtime": "2026-07-30T15:05:54.458Z",
-		"size": 12837,
-		"path": "../public/assets/routes-D7RghanY.js"
-	},
-	"/assets/aichat-DFfOwAiK.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"550f5-A/J1l5dqV+lx2XuJw8hgEfsTFRw\"",
-		"mtime": "2026-07-30T15:05:54.455Z",
-		"size": 348405,
-		"path": "../public/assets/aichat-DFfOwAiK.js"
-	},
-	"/assets/index-D5ThEGXt.js": {
-		"type": "text/javascript; charset=utf-8",
-		"etag": "\"542bf-x10h/u3LIp4ZoHiSrOlHXvGKMZk\"",
-		"mtime": "2026-07-30T15:05:54.453Z",
-		"size": 344767,
-		"path": "../public/assets/index-D5ThEGXt.js"
-	},
-	"/assets/styles-jPIMG1Yr.css": {
+	"/assets/aichat-B2k4QVOw.css": {
 		"type": "text/css; charset=utf-8",
-		"etag": "\"1120b-Oyyi8Lo4B98iwwsNMC4N1oIkpr8\"",
-		"mtime": "2026-07-30T15:05:54.467Z",
-		"size": 70155,
-		"path": "../public/assets/styles-jPIMG1Yr.css"
+		"etag": "\"110b0-ktCrTpfc4yMYyf4bIOXbtYXFctY\"",
+		"mtime": "2026-07-31T10:49:44.672Z",
+		"size": 69808,
+		"path": "../public/assets/aichat-B2k4QVOw.css"
+	},
+	"/assets/routes-BpJ4f2rR.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"3225-23+9L/HZ0b2hnwTpvnd8gzfsP3I\"",
+		"mtime": "2026-07-31T10:49:44.669Z",
+		"size": 12837,
+		"path": "../public/assets/routes-BpJ4f2rR.js"
+	},
+	"/assets/styles-djrKisD6.css": {
+		"type": "text/css; charset=utf-8",
+		"etag": "\"1242d-4qXf2Y9GV1F3OpldWeWsj92Dy5s\"",
+		"mtime": "2026-07-31T10:49:44.676Z",
+		"size": 74797,
+		"path": "../public/assets/styles-djrKisD6.css"
+	},
+	"/assets/index-B1yDahyB.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"5435a-WQtNEsFUSljGUPTxqswXIc3A1zc\"",
+		"mtime": "2026-07-31T10:49:44.664Z",
+		"size": 344922,
+		"path": "../public/assets/index-B1yDahyB.js"
+	},
+	"/assets/aichat-BYZxv-R7.js": {
+		"type": "text/javascript; charset=utf-8",
+		"etag": "\"15a6b2-10U8DJj/HbnejLwOH5KoCJGvEJA\"",
+		"mtime": "2026-07-31T10:49:44.666Z",
+		"size": 1418930,
+		"path": "../public/assets/aichat-BYZxv-R7.js"
 	}
 };
 //#endregion

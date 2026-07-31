@@ -1,5 +1,5 @@
 import { a as __toESM } from "../_runtime.mjs";
-import { r as require_react } from "./react+tanstack__react-query.mjs";
+import { n as require_react } from "./@radix-ui/react-compose-refs+[...].mjs";
 //#region node_modules/react-error-boundary/dist/react-error-boundary.js
 var import_react = /* @__PURE__ */ __toESM(require_react(), 1);
 var h = (0, import_react.createContext)(null);

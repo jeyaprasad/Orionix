@@ -1,9 +1,10 @@
-import React, { memo, useEffect, useRef } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChatMessage, AnalysisResult } from "../../hooks/useAnalysis";
 import { PipelineVisualizer } from "./PipelineVisualizer";
 import { AnalysisResults } from "./AnalysisResults";
+import { MapSelector } from "./MapSelector";
 
 interface ChatInterfaceProps {
   messages: ChatMessage[];
@@ -22,6 +23,10 @@ interface ChatInterfaceProps {
   askInsight: (q: string) => void;
   insightLoading: boolean;
   handleResetChat: () => void;
+  coordinates: { lat: number; lng: number } | null;
+  setCoordinates: (val: { lat: number; lng: number } | null) => void;
+  bbox: { minLat: number; minLng: number; maxLat: number; maxLng: number } | null;
+  setBbox: (val: { minLat: number; minLng: number; maxLat: number; maxLng: number } | null) => void;
 }
 
 export const ChatInterface = memo(({
@@ -40,8 +45,13 @@ export const ChatInterface = memo(({
   showHistory,
   askInsight,
   insightLoading,
-  handleResetChat
+  handleResetChat,
+  coordinates,
+  setCoordinates,
+  bbox,
+  setBbox
 }: ChatInterfaceProps) => {
+  const [isMapOpen, setIsMapOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -169,9 +179,20 @@ export const ChatInterface = memo(({
               className="cb-attach-btn"
               onClick={() => document.getElementById("file-upload")?.click()}
               title="Attach Image"
+              type="button"
             >
               <span style={{ fontSize: "1.1rem" }}>+</span>
               <span className="cb-attach-text">Attach</span>
+            </button>
+            <button
+              className="cb-attach-btn"
+              onClick={() => setIsMapOpen(true)}
+              title="Select Area on Map"
+              type="button"
+              style={{ borderLeft: 'none' }}
+            >
+              <span style={{ fontSize: "1.1rem" }}>🗺️</span>
+              <span className="cb-attach-text">Map</span>
             </button>
             <input
               id="file-upload"
@@ -205,6 +226,19 @@ export const ChatInterface = memo(({
           <div className="cb-footer-text">
             Orionix can make mistakes. Verify critical intelligence.
           </div>
+        </div>
+      )}
+      {isMapOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <MapSelector
+            onConfirm={(capturedFile, coords, bboxVal) => {
+              handleFile(capturedFile);
+              setCoordinates(coords);
+              setBbox(bboxVal);
+              setIsMapOpen(false);
+            }}
+            onCancel={() => setIsMapOpen(false)}
+          />
         </div>
       )}
     </div>

@@ -20,6 +20,9 @@ class AnalysisMetadata(BaseModel):
     processing_time_ms: float = Field(..., description="Total end-to-end pipeline time in milliseconds.")
     timestamp: str = Field(..., description="ISO-8601 UTC timestamp of when the request was processed.")
     version: str = Field(default="1.0", description="API response schema version.")
+    latitude: Optional[float] = Field(None, description="Captured latitude coordinate.")
+    longitude: Optional[float] = Field(None, description="Captured longitude coordinate.")
+    bbox: Optional[List[float]] = Field(None, description="Captured bounding box bounds.")
 
 
 class LandCoverClass(BaseModel):
@@ -115,6 +118,9 @@ class AnalysisResponse(BaseModel):
         None,
         description="Qualitative risk level: Low | Medium | High."
     )
+    latitude: Optional[float] = Field(None, description="Captured latitude coordinate.")
+    longitude: Optional[float] = Field(None, description="Captured longitude coordinate.")
+    bbox: Optional[List[float]] = Field(None, description="Captured bounding box bounds.")
 
     # --- Metadata ---
     metadata: AnalysisMetadata = Field(

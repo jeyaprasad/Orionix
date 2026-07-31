@@ -25,7 +25,11 @@ function OrionixDemo() {
     runAnalysis,
     askInsight,
     insightLoading,
-    abortRequest
+    abortRequest,
+    coordinates,
+    setCoordinates,
+    bbox,
+    setBbox
   } = useAnalysis();
 
   const [chatInput, setChatInput] = useState("");
@@ -115,6 +119,10 @@ function OrionixDemo() {
                 askInsight={askInsight}
                 insightLoading={insightLoading}
                 handleResetChat={handleResetChat}
+                coordinates={coordinates}
+                setCoordinates={setCoordinates}
+                bbox={bbox}
+                setBbox={setBbox}
               />
             </>
           )}

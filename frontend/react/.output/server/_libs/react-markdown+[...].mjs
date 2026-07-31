@@ -1,5 +1,6 @@
 import { a as __toESM } from "../_runtime.mjs";
-import { n as require_jsx_runtime, r as require_react } from "./react+tanstack__react-query.mjs";
+import { n as require_react } from "./@radix-ui/react-compose-refs+[...].mjs";
+import { n as require_jsx_runtime } from "./react+tanstack__react-query.mjs";
 import "./devlop.mjs";
 import { n as VFileMessage, t as toJsxRuntime } from "./hast-util-to-jsx-runtime+[...].mjs";
 import { t as urlAttributes } from "./html-url-attributes.mjs";
