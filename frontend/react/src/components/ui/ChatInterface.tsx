@@ -238,6 +238,17 @@ export const ChatInterface = memo(({
               setIsMapOpen(false);
             }}
             onCancel={() => setIsMapOpen(false)}
+            waterMaskBase64={result?.water_mask_base64}
+            analyzedBbox={
+              result?.bbox && result.bbox.length === 4
+                ? {
+                    minLat: result.bbox[0],
+                    minLng: result.bbox[1],
+                    maxLat: result.bbox[2],
+                    maxLng: result.bbox[3],
+                  }
+                : null
+            }
           />
         </div>
       )}

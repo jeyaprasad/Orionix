@@ -5,7 +5,7 @@ import numpy as np
 from PIL import Image
 from typing import Dict, Any
 from backend.vision.remoteclip import remoteclip_service
-from backend.vision.preprocessing import preprocess_image, compute_vegetation_health_score
+from backend.vision.preprocessing import preprocess_image, compute_vegetation_health_score, detect_water_extent
 from backend.utils.logger import logger
 
 from backend.vision.labels import ZERO_SHOT_LABELS
@@ -21,6 +21,9 @@ def run_mock_inference(image: Image.Image) -> Dict[str, Any]:
     
     # 1. Compute lightweight vegetation health score proxy
     veg_score = compute_vegetation_health_score(image)
+    
+    # Run water detection
+    water_coverage_percent, water_mask_base64 = detect_water_extent(image)
     
     # 2. Extract basic RGB statistics
     try:
@@ -90,6 +93,8 @@ def run_mock_inference(image: Image.Image) -> Dict[str, Any]:
         "zero_shot_inspection": zero_shot,
         "vegetation_health_score": veg_score,
         "vegetation_health_disclaimer": "proxy index from RGB imagery, not true NDVI (requires NIR band data)",
+        "water_coverage_percent": water_coverage_percent,
+        "water_mask_base64": water_mask_base64,
         "performance": {
             "inference_time_ms": inference_time_ms,
             "total_time_ms": total_time_ms
@@ -155,6 +160,9 @@ def run_remoteclip_inference(image: Image.Image) -> Dict[str, Any]:
 
     # Calculate lightweight vegetation health score proxy
     veg_score = compute_vegetation_health_score(image)
+    
+    # Run water detection
+    water_coverage_percent, water_mask_base64 = detect_water_extent(image)
 
     return {
         "embedding_shape": embedding_shape,
@@ -174,6 +182,8 @@ def run_remoteclip_inference(image: Image.Image) -> Dict[str, Any]:
         ],
         "vegetation_health_score": veg_score,
         "vegetation_health_disclaimer": "proxy index from RGB imagery, not true NDVI (requires NIR band data)",
+        "water_coverage_percent": water_coverage_percent,
+        "water_mask_base64": water_mask_base64,
         "performance": {
             "inference_time_ms": inference_time_ms,
             "total_time_ms": total_time_ms

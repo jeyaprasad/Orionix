@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 from typing import Any
 from backend.utils.logger import logger
+from backend.vision.water_detection import detect_water_extent
 
 def preprocess_image(image: Image.Image, transform: Any) -> torch.Tensor:
     """
@@ -64,4 +65,7 @@ def compute_vegetation_health_score(image: Image.Image) -> float:
         logger.error(f"Error computing vegetation health score: {str(e)}")
         # Fallback to a default score of 0.0 on any failure
         return 0.0
+
+
+
 

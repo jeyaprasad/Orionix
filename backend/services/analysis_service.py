@@ -33,6 +33,7 @@ from backend.vision.remoteclip import remoteclip_service
 
 from backend.interpreter.eo_interpreter import interpret
 from backend.interpreter.eo_schema import SimilarityEntry
+from backend.interpreter.eo_rules import compute_flood_risk_score
 
 from backend.prompts.prompt_builder import prompt_builder
 from backend.schemas.prompt import EOContext
@@ -278,6 +279,17 @@ class AnalysisService:
         # title: short scene descriptor shown in the report card header
         title = f"{eo_result.dominant_land_cover} Scene Analysis"
 
+        # Calculate rule-based flood risk parameters
+        urban_density_val = "High" if "urban" in str(eo_result.dominant_land_cover).lower() or "resid" in str(eo_result.dominant_land_cover).lower() else "Low"
+        agricultural_presence_val = "High" if "forest" in str(eo_result.dominant_land_cover).lower() or "agricult" in str(eo_result.dominant_land_cover).lower() or "crop" in str(eo_result.dominant_land_cover).lower() else "Low"
+        water_pct_val = raw_outputs.get("water_coverage_percent") or 0.0
+
+        flood_risk = compute_flood_risk_score(
+            water_coverage_percent=water_pct_val,
+            urban_density=urban_density_val,
+            agricultural_presence=agricultural_presence_val
+        )
+
         response = AnalysisResponse(
             status=status,
             dominant_land_cover=eo_result.dominant_land_cover,
@@ -293,6 +305,11 @@ class AnalysisService:
             warning=gpt_warning,
             vegetation_health_score=eo_result.vegetation_health_score,
             vegetation_health_disclaimer=eo_result.vegetation_health_disclaimer,
+            water_coverage_percent=raw_outputs.get("water_coverage_percent"),
+            water_mask_base64=raw_outputs.get("water_mask_base64"),
+            flood_risk_score=flood_risk["risk_score"],
+            flood_risk_label=flood_risk["risk_label"],
+            flood_risk_reasoning=flood_risk["reasoning"],
             latitude=latitude,
             longitude=longitude,
             bbox=bbox,

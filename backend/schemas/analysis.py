@@ -96,6 +96,26 @@ class AnalysisResponse(BaseModel):
         None,
         description="Disclaimer explaining that this is an RGB-based proxy."
     )
+    water_coverage_percent: Optional[float] = Field(
+        None,
+        description="OpenCV detected water extent coverage percentage."
+    )
+    water_mask_base64: Optional[str] = Field(
+        None,
+        description="Base64-encoded PNG image of transparent water mask."
+    )
+    flood_risk_score: Optional[float] = Field(
+        None,
+        description="Rule-based calculated flood risk score (0-100)."
+    )
+    flood_risk_label: Optional[str] = Field(
+        None,
+        description="Qualitative flood risk label: Low | Moderate | High | Severe."
+    )
+    flood_risk_reasoning: Optional[str] = Field(
+        None,
+        description="One-line reasoning explaining the flood risk assessment."
+    )
 
     # --- Frontend-compatible fields (mirrors the existing UI contract) ---
     insight: str = Field(
@@ -127,3 +147,15 @@ class AnalysisResponse(BaseModel):
         ...,
         description="Request-level provenance, model info, and performance metrics."
     )
+
+
+class FloodComparisonResponse(BaseModel):
+    """
+    Response schema for POST /api/analyze/compare-flood.
+    """
+    before_water_coverage_percent: float = Field(..., description="Water coverage percentage in the before image.")
+    after_water_coverage_percent: float = Field(..., description="Water coverage percentage in the after image.")
+    water_coverage_change_percent: float = Field(..., description="Difference in water coverage (after - before).")
+    classification: str = Field(..., description="Flood classification outcome based on change delta.")
+    before_water_mask_base64: str = Field(..., description="Base64 encoded PNG water mask for the before image.")
+    after_water_mask_base64: str = Field(..., description="Base64 encoded PNG water mask for the after image.")

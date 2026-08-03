@@ -89,3 +89,73 @@ SUMMARY_TEMPLATE_LOW = (
     "though the similarity margins between categories are narrow. "
     "Results should be treated as indicative only."
 )
+
+
+def compute_flood_risk_score(
+    water_coverage_percent: float,
+    urban_density: str,
+    agricultural_presence: str,
+) -> dict:
+    """
+    Computes a flood risk score (0-100) and qualitative risk label.
+    
+    Weights risk higher when water overlaps urban/residential settlements
+    or agricultural areas, and lower in forest or barren zones.
+    """
+    if water_coverage_percent <= 0:
+        return {
+            "risk_score": 0.0,
+            "risk_label": "Low",
+            "reasoning": "No surface water coverage detected."
+        }
+
+    # Normalize inputs
+    urban = str(urban_density).strip().lower()
+    agri = str(agricultural_presence).strip().lower()
+
+    # Determine impact multiplier
+    # Default baseline multiplier for barren/forest/low impact is 1.0
+    impact_multiplier = 1.0
+    impact_reasons = []
+
+    if "high" in urban:
+        impact_multiplier += 0.5
+        impact_reasons.append("high urban density settlement impact")
+    elif "medium" in urban:
+        impact_multiplier += 0.25
+        impact_reasons.append("moderate urban density impact")
+
+    if "high" in agri or "detected" in agri or "yes" in agri or "true" in agri:
+        impact_multiplier += 0.3
+        impact_reasons.append("agricultural crop inundation risk")
+    elif "medium" in agri:
+        impact_multiplier += 0.15
+        impact_reasons.append("moderate agricultural land impact")
+
+    # Base score is proportional to water coverage (linear scaling with clamping)
+    base_score = water_coverage_percent * 1.2
+    risk_score = min(base_score * impact_multiplier, 100.0)
+    risk_score = round(risk_score, 2)
+
+    # Classify qualitative risk label
+    if risk_score < 25.0:
+        risk_label = "Low"
+    elif risk_score < 50.0:
+        risk_label = "Moderate"
+    elif risk_score < 75.0:
+        risk_label = "High"
+    else:
+        risk_label = "Severe"
+
+    # Construct one-line reasoning string
+    if not impact_reasons:
+        reasoning = f"Flood risk is {risk_label.lower()} ({risk_score}%) due to low human/crop impact in the water-covered zone."
+    else:
+        reasons_str = " and ".join(impact_reasons)
+        reasoning = f"Flood risk is elevated to {risk_label.lower()} ({risk_score}%) due to water overlap with {reasons_str}."
+
+    return {
+        "risk_score": risk_score,
+        "risk_label": risk_label,
+        "reasoning": reasoning
+    }

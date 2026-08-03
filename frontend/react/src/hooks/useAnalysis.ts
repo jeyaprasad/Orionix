@@ -33,6 +33,11 @@ export interface AnalysisResult {
   bar_chart?: string;
   geo_metadata?: Record<string, unknown>;
   scene_type?: string;
+  water_coverage_percent?: number;
+  water_mask_base64?: string;
+  latitude?: number;
+  longitude?: number;
+  bbox?: number[];
 }
 
 export interface ChatMessage {
@@ -175,6 +180,7 @@ export function useAnalysis() {
         formData.append("min_longitude", bbox.minLng.toString());
         formData.append("max_latitude", bbox.maxLat.toString());
         formData.append("max_longitude", bbox.maxLng.toString());
+        formData.append("bbox", JSON.stringify([bbox.minLat, bbox.minLng, bbox.maxLat, bbox.maxLng]));
       }
 
       const controller = new AbortController();

@@ -17,9 +17,11 @@ import time
 import json
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException, status
 from typing import Optional
-from backend.schemas.analysis import AnalysisResponse
+from backend.schemas.analysis import AnalysisResponse, FloodComparisonResponse
 from backend.services.analysis_service import analysis_service
 from backend.utils.logger import logger
+from backend.vision.water_detection import detect_water_extent
+from backend.vision.image_loader import validate_and_load_image
 
 router = APIRouter(prefix="/api", tags=["Analysis"])
 
@@ -144,3 +146,99 @@ async def analyze_image(
         f"Total={total_ms:.0f}ms."
     )
     return result
+
+
+@router.post(
+    "/analyze/compare-flood",
+    response_model=FloodComparisonResponse,
+    summary="Compare before and after images for flooding delta",
+    description=(
+        "Upload a 'before' satellite image and an 'after' satellite image. "
+        "Runs the OpenCV water-extent detector on both and computes the delta."
+    ),
+)
+async def compare_flood(
+    before: UploadFile = File(...),
+    after: UploadFile = File(...),
+) -> FloodComparisonResponse:
+    request_start = time.perf_counter()
+    logger.info(
+        f"[/api/analyze/compare-flood] Request received. "
+        f"Before: '{before.filename}', After: '{after.filename}'."
+    )
+
+    try:
+        # 1. Read before image
+        before_bytes = await before.read()
+        if not before_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Before image upload is empty.",
+            )
+        # 2. Read after image
+        after_bytes = await after.read()
+        if not after_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="After image upload is empty.",
+            )
+        
+        # 3. Validate and load images using unified loader
+        try:
+            before_pil = validate_and_load_image(before_bytes, before.filename or "before.jpg")
+        except ValueError as e:
+            logger.warning(f"[/api/analyze/compare-flood] Before image validation failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Before image error: {e}",
+            )
+
+        try:
+            after_pil = validate_and_load_image(after_bytes, after.filename or "after.jpg")
+        except ValueError as e:
+            logger.warning(f"[/api/analyze/compare-flood] After image validation failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"After image error: {e}",
+            )
+
+        # 4. Run water detector on both
+        before_pct, before_mask = detect_water_extent(before_pil)
+        after_pct, after_mask = detect_water_extent(after_pil)
+
+        # 5. Compute change delta
+        delta = after_pct - before_pct
+
+        # 6. Classify
+        if delta < 5.0:
+            classification = "No significant change"
+        elif 5.0 <= delta < 15.0:
+            classification = "Minor waterlogging detected"
+        elif 15.0 <= delta <= 30.0:
+            classification = "Moderate flooding detected"
+        else:
+            classification = "Severe flooding detected"
+
+        total_ms = (time.perf_counter() - request_start) * 1000
+        logger.info(
+            f"[/api/analyze/compare-flood] Completed in {total_ms:.0f}ms. "
+            f"Before={before_pct}%, After={after_pct}%, Delta={delta:.2f}%, Class={classification}."
+        )
+
+        return FloodComparisonResponse(
+            before_water_coverage_percent=before_pct,
+            after_water_coverage_percent=after_pct,
+            water_coverage_change_percent=round(delta, 2),
+            classification=classification,
+            before_water_mask_base64=before_mask,
+            after_water_mask_base64=after_mask,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[/api/analyze/compare-flood] Unexpected error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred during flood comparison.",
+        )

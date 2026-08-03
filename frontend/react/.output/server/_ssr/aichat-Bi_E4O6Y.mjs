@@ -3,7 +3,7 @@ import { n as AnimatePresence, t as motion } from "../_libs/framer-motion.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { h as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/react+tanstack__react-query.mjs";
-import "./router-Dw7LaK9u.mjs";
+import "./router-CGg5CKCm.mjs";
 import { t as imageCompression } from "../_libs/browser-image-compression.mjs";
 import { t as Markdown } from "../_libs/react-markdown+[...].mjs";
 import { t as remarkGfm } from "../_libs/remark-gfm.mjs";
@@ -13,7 +13,7 @@ import { n as polygon, t as bbox } from "../_libs/@turf/bbox+[...].mjs";
 import { t as Slot } from "../_libs/radix-ui__react-slot.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/aichat-phMNGeH5.js
+//#region node_modules/.nitro/vite/services/ssr/assets/aichat-Bi_E4O6Y.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var import_maplibre_gl = /* @__PURE__ */ __toESM(require_maplibre_gl());
@@ -172,6 +172,12 @@ function useAnalysis() {
 					formData.append("min_longitude", bbox.minLng.toString());
 					formData.append("max_latitude", bbox.maxLat.toString());
 					formData.append("max_longitude", bbox.maxLng.toString());
+					formData.append("bbox", JSON.stringify([
+						bbox.minLat,
+						bbox.minLng,
+						bbox.maxLat,
+						bbox.maxLng
+					]));
 				}
 				const controller = new AbortController();
 				setAbortController(controller);
@@ -604,7 +610,7 @@ var Button = import_react.forwardRef(({ className, variant, size, asChild = fals
 	});
 });
 Button.displayName = "Button";
-function MapSelector({ onConfirm, onCancel }) {
+function MapSelector({ onConfirm, onCancel, waterMaskBase64, analyzedBbox }) {
 	const mapContainerRef = (0, import_react.useRef)(null);
 	const mapRef = (0, import_react.useRef)(null);
 	const markerRef = (0, import_react.useRef)(null);
@@ -612,6 +618,7 @@ function MapSelector({ onConfirm, onCancel }) {
 	const [selectedCoords, setSelectedCoords] = (0, import_react.useState)(null);
 	const [selectedBbox, setSelectedBbox] = (0, import_react.useState)(null);
 	const [loading, setLoading] = (0, import_react.useState)(false);
+	const [showOverlay, setShowOverlay] = (0, import_react.useState)(true);
 	const isDrawingRef = (0, import_react.useRef)(false);
 	const startLngLatRef = (0, import_react.useRef)(null);
 	(0, import_react.useEffect)(() => {
@@ -685,7 +692,63 @@ function MapSelector({ onConfirm, onCancel }) {
 	}, []);
 	(0, import_react.useEffect)(() => {
 		const map = mapRef.current;
+		if (!map || !waterMaskBase64 || !analyzedBbox) return;
+		const sourceId = "flood-mask-source";
+		const layerId = "flood-mask-layer";
+		const updateOverlay = () => {
+			if (map.getSource(sourceId)) {
+				if (map.getLayer(layerId)) map.removeLayer(layerId);
+				map.removeSource(sourceId);
+			}
+			if (showOverlay) {
+				const { minLat, minLng, maxLat, maxLng } = analyzedBbox;
+				const coordinates = [
+					[minLng, maxLat],
+					[maxLng, maxLat],
+					[maxLng, minLat],
+					[minLng, minLat]
+				];
+				map.addSource(sourceId, {
+					type: "image",
+					url: `data:image/png;base64,${waterMaskBase64}`,
+					coordinates
+				});
+				map.addLayer({
+					id: layerId,
+					type: "raster",
+					source: sourceId,
+					paint: { "raster-opacity": .5 }
+				});
+				map.fitBounds([
+					minLng,
+					minLat,
+					maxLng,
+					maxLat
+				], {
+					padding: 50,
+					maxZoom: 15,
+					animate: false
+				});
+			}
+		};
+		if (map.isStyleLoaded()) updateOverlay();
+		else map.on("load", updateOverlay);
+		return () => {
+			if (mapRef.current) {
+				const m = mapRef.current;
+				if (m.getLayer(layerId)) m.removeLayer(layerId);
+				if (m.getSource(sourceId)) m.removeSource(sourceId);
+			}
+		};
+	}, [
+		waterMaskBase64,
+		analyzedBbox,
+		showOverlay
+	]);
+	(0, import_react.useEffect)(() => {
+		const map = mapRef.current;
 		if (!map) return;
+		if (waterMaskBase64 && analyzedBbox) return;
 		if (markerRef.current) {
 			markerRef.current.remove();
 			markerRef.current = null;
@@ -764,7 +827,11 @@ function MapSelector({ onConfirm, onCancel }) {
 				map.boxZoom.enable();
 			};
 		}
-	}, [mode]);
+	}, [
+		mode,
+		waterMaskBase64,
+		analyzedBbox
+	]);
 	const updateBoxLayer = (minLng, minLat, maxLng, maxLat) => {
 		const map = mapRef.current;
 		if (!map) return;
@@ -819,12 +886,29 @@ function MapSelector({ onConfirm, onCancel }) {
 			setLoading(false);
 		}
 	};
+	const isOverlayMode = !!(waterMaskBase64 && analyzedBbox);
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "flex flex-col md:flex-row w-full max-w-5xl h-[calc(100vh-120px)] min-h-[500px] bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl",
 		children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 			className: "w-full md:w-[340px] flex-shrink-0 flex flex-col p-5 bg-slate-950 border-b md:border-b-0 md:border-r border-slate-800",
 			children: [
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				isOverlayMode ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					className: "flex flex-col gap-2 w-full",
+					children: [
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+							className: "text-cyan-400 font-bold uppercase text-[10px] tracking-widest font-mono",
+							children: "⚡ Telemetry Overlay Active"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("h3", {
+							className: "text-slate-100 text-sm font-semibold mt-1",
+							children: "Flood Extent Mapping"
+						}),
+						/* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", {
+							className: "text-xs text-slate-400 mt-1 leading-relaxed",
+							children: "Below are the coordinates analyzed for water presence overlay mapping."
+						})
+					]
+				}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					className: "flex flex-col gap-2.5 w-full",
 					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 						variant: mode === "point" ? "default" : "outline",
@@ -840,7 +924,7 @@ function MapSelector({ onConfirm, onCancel }) {
 						children: "⏹ Draw a box"
 					})]
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				!isOverlayMode && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "text-[11px] text-slate-400 mt-4 font-mono leading-relaxed",
 					children: mode === "point" ? "• Click anywhere on the map to drop a point marker." : "• Click and drag your mouse on the map to draw a custom bounding box."
 				}),
@@ -848,7 +932,45 @@ function MapSelector({ onConfirm, onCancel }) {
 					className: "flex-grow flex flex-col justify-center my-6",
 					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 						className: "text-xs text-slate-300 font-mono bg-slate-900/60 p-4.5 rounded-lg border border-slate-800/80 w-full min-h-[140px] flex flex-col justify-center",
-						children: mode === "point" && selectedCoords ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+						children: isOverlayMode && analyzedBbox ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+							className: "flex flex-col gap-2",
+							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+								className: "text-cyan-400 font-bold uppercase text-[9px] tracking-wider",
+								children: "Analyzed Bounds"
+							}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+								className: "grid grid-cols-2 gap-x-2 gap-y-3 mt-1",
+								children: [
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[10px] text-slate-500 block",
+										children: "MIN LAT"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[11px] text-slate-200",
+										children: analyzedBbox.minLat.toFixed(5)
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[10px] text-slate-500 block",
+										children: "MIN LNG"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[11px] text-slate-200",
+										children: analyzedBbox.minLng.toFixed(5)
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[10px] text-slate-500 block",
+										children: "MAX LAT"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[11px] text-slate-200",
+										children: analyzedBbox.maxLat.toFixed(5)
+									})] }),
+									/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[10px] text-slate-500 block",
+										children: "MAX LNG"
+									}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+										className: "text-[11px] text-slate-200",
+										children: analyzedBbox.maxLng.toFixed(5)
+									})] })
+								]
+							})]
+						}) : mode === "point" && selectedCoords ? /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 							className: "flex flex-col gap-2",
 							children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
 								className: "text-cyan-400 font-bold uppercase text-[9px] tracking-wider",
@@ -919,9 +1041,13 @@ function MapSelector({ onConfirm, onCancel }) {
 						})
 					})
 				}),
-				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
 					className: "flex flex-col gap-2 mt-auto w-full pt-4 border-t border-slate-800/80",
-					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+					children: isOverlayMode ? /* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
+						onClick: onCancel,
+						className: "bg-slate-800 hover:bg-slate-700 text-slate-100 w-full py-5 text-xs font-semibold border border-slate-700",
+						children: "Close Overlay View"
+					}) : /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)(Button, {
 						onClick: handleConfirm,
 						disabled: loading || !selectedCoords && !selectedBbox,
 						className: "bg-cyan-600 hover:bg-cyan-700 text-white w-full py-5 text-xs font-semibold",
@@ -932,15 +1058,25 @@ function MapSelector({ onConfirm, onCancel }) {
 						disabled: loading,
 						className: "border-slate-700 text-slate-300 hover:bg-slate-900 w-full py-5 text-xs",
 						children: "Cancel"
-					})]
+					})] })
 				})
 			]
-		}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-			className: "flex-grow h-full w-full relative min-h-[300px]",
-			children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
-				ref: mapContainerRef,
-				className: "absolute inset-0 w-full h-full"
-			})
+		}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+			className: "flex-grow h-full w-full relative min-h-[300px] flex flex-col",
+			children: [isOverlayMode && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "bg-slate-950 border-b border-slate-800 p-2.5 flex justify-end items-center z-10",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Button, {
+					onClick: () => setShowOverlay(!showOverlay),
+					className: `text-xs px-4 py-2 font-mono tracking-wider uppercase transition-colors ${showOverlay ? "bg-cyan-600 hover:bg-cyan-700 text-white" : "border border-slate-700 text-slate-300 hover:bg-slate-800"}`,
+					children: ["🌊 ", showOverlay ? "Hide Flood Overlay" : "Show Flood Overlay"]
+				})
+			}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				className: "flex-grow relative w-full h-full",
+				children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					ref: mapContainerRef,
+					className: "absolute inset-0 w-full h-full"
+				})
+			})]
 		})]
 	});
 }
@@ -1189,7 +1325,14 @@ var ChatInterface = (0, import_react.memo)(({ messages, status, stageIndex, resu
 						setBbox(bboxVal);
 						setIsMapOpen(false);
 					},
-					onCancel: () => setIsMapOpen(false)
+					onCancel: () => setIsMapOpen(false),
+					waterMaskBase64: result?.water_mask_base64,
+					analyzedBbox: result?.bbox && result.bbox.length === 4 ? {
+						minLat: result.bbox[0],
+						minLng: result.bbox[1],
+						maxLat: result.bbox[2],
+						maxLng: result.bbox[3]
+					} : null
 				})
 			})
 		]

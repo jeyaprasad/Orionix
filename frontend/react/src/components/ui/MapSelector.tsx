@@ -11,9 +11,11 @@ interface MapSelectorProps {
     bbox: { minLat: number; minLng: number; maxLat: number; maxLng: number } | null
   ) => void;
   onCancel: () => void;
+  waterMaskBase64?: string | null;
+  analyzedBbox?: { minLat: number; minLng: number; maxLat: number; maxLng: number } | null;
 }
 
-export function MapSelector({ onConfirm, onCancel }: MapSelectorProps) {
+export function MapSelector({ onConfirm, onCancel, waterMaskBase64, analyzedBbox }: MapSelectorProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
   const markerRef = useRef<maplibregl.Marker | null>(null);
@@ -27,6 +29,7 @@ export function MapSelector({ onConfirm, onCancel }: MapSelectorProps) {
     maxLng: number;
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [showOverlay, setShowOverlay] = useState(true);
 
   // Drawing state
   const isDrawingRef = useRef(false);
@@ -122,10 +125,77 @@ export function MapSelector({ onConfirm, onCancel }: MapSelectorProps) {
     };
   }, []);
 
+  // Manage image overlay layer
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !waterMaskBase64 || !analyzedBbox) return;
+
+    const sourceId = "flood-mask-source";
+    const layerId = "flood-mask-layer";
+
+    const updateOverlay = () => {
+      // Check if source already exists
+      const existingSource = map.getSource(sourceId);
+      if (existingSource) {
+        if (map.getLayer(layerId)) map.removeLayer(layerId);
+        map.removeSource(sourceId);
+      }
+
+      if (showOverlay) {
+        const { minLat, minLng, maxLat, maxLng } = analyzedBbox;
+        const coordinates = [
+          [minLng, maxLat], // top-left
+          [maxLng, maxLat], // top-right
+          [maxLng, minLat], // bottom-right
+          [minLng, minLat]  // bottom-left
+        ];
+
+        map.addSource(sourceId, {
+          type: "image",
+          url: `data:image/png;base64,${waterMaskBase64}`,
+          coordinates: coordinates,
+        });
+
+        map.addLayer({
+          id: layerId,
+          type: "raster",
+          source: sourceId,
+          paint: {
+            "raster-opacity": 0.5, // ~50% opacity
+          },
+        });
+
+        // Fit map bounds to the analyzed bbox
+        map.fitBounds([minLng, minLat, maxLng, maxLat], {
+          padding: 50,
+          maxZoom: 15,
+          animate: false,
+        });
+      }
+    };
+
+    if (map.isStyleLoaded()) {
+      updateOverlay();
+    } else {
+      map.on("load", updateOverlay);
+    }
+
+    return () => {
+      if (mapRef.current) {
+        const m = mapRef.current;
+        if (m.getLayer(layerId)) m.removeLayer(layerId);
+        if (m.getSource(sourceId)) m.removeSource(sourceId);
+      }
+    };
+  }, [waterMaskBase64, analyzedBbox, showOverlay]);
+
   // Update map behavior based on selection mode
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
+
+    // If viewing results overlay, ignore selection mode listeners
+    if (waterMaskBase64 && analyzedBbox) return;
 
     // Reset markers/box layers on mode change
     if (markerRef.current) {
@@ -231,7 +301,7 @@ export function MapSelector({ onConfirm, onCancel }: MapSelectorProps) {
         map.boxZoom.enable();
       };
     }
-  }, [mode]);
+  }, [mode, waterMaskBase64, analyzedBbox]);
 
   const updateBoxLayer = (minLng: number, minLat: number, maxLng: number, maxLat: number) => {
     const map = mapRef.current;
@@ -312,43 +382,84 @@ export function MapSelector({ onConfirm, onCancel }: MapSelectorProps) {
     }
   };
 
+  const isOverlayMode = !!(waterMaskBase64 && analyzedBbox);
+
   return (
     <div className="flex flex-col md:flex-row w-full max-w-5xl h-[calc(100vh-120px)] min-h-[500px] bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
       
       {/* LEFT CONTROL PANEL */}
       <div className="w-full md:w-[340px] flex-shrink-0 flex flex-col p-5 bg-slate-950 border-b md:border-b-0 md:border-r border-slate-800">
         
-        {/* Toggle Mode Buttons Stacked */}
-        <div className="flex flex-col gap-2.5 w-full">
-          <Button
-            variant={mode === "point" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setMode("point")}
-            className={`w-full justify-start text-left py-5 px-4 ${mode === "point" ? "bg-cyan-600 hover:bg-cyan-700 text-white" : "border-slate-700 text-slate-300 hover:bg-slate-900"}`}
-          >
-            📍 Click a point
-          </Button>
-          <Button
-            variant={mode === "box" ? "default" : "outline"}
-            size="sm"
-            onClick={() => setMode("box")}
-            className={`w-full justify-start text-left py-5 px-4 ${mode === "box" ? "bg-cyan-600 hover:bg-cyan-700 text-white" : "border-slate-700 text-slate-300 hover:bg-slate-900"}`}
-          >
-            ⏹ Draw a box
-          </Button>
-        </div>
+        {isOverlayMode ? (
+          /* Overlay Info Header */
+          <div className="flex flex-col gap-2 w-full">
+            <div className="text-cyan-400 font-bold uppercase text-[10px] tracking-widest font-mono">
+              ⚡ Telemetry Overlay Active
+            </div>
+            <h3 className="text-slate-100 text-sm font-semibold mt-1">
+              Flood Extent Mapping
+            </h3>
+            <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              Below are the coordinates analyzed for water presence overlay mapping.
+            </p>
+          </div>
+        ) : (
+          /* Toggle Mode Buttons Stacked */
+          <div className="flex flex-col gap-2.5 w-full">
+            <Button
+              variant={mode === "point" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setMode("point")}
+              className={`w-full justify-start text-left py-5 px-4 ${mode === "point" ? "bg-cyan-600 hover:bg-cyan-700 text-white" : "border-slate-700 text-slate-300 hover:bg-slate-900"}`}
+            >
+              📍 Click a point
+            </Button>
+            <Button
+              variant={mode === "box" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setMode("box")}
+              className={`w-full justify-start text-left py-5 px-4 ${mode === "box" ? "bg-cyan-600 hover:bg-cyan-700 text-white" : "border-slate-700 text-slate-300 hover:bg-slate-900"}`}
+            >
+              ⏹ Draw a box
+            </Button>
+          </div>
+        )}
 
         {/* Action / Mode Hint */}
-        <div className="text-[11px] text-slate-400 mt-4 font-mono leading-relaxed">
-          {mode === "point" 
-            ? "• Click anywhere on the map to drop a point marker." 
-            : "• Click and drag your mouse on the map to draw a custom bounding box."}
-        </div>
+        {!isOverlayMode && (
+          <div className="text-[11px] text-slate-400 mt-4 font-mono leading-relaxed">
+            {mode === "point" 
+              ? "• Click anywhere on the map to drop a point marker." 
+              : "• Click and drag your mouse on the map to draw a custom bounding box."}
+          </div>
+        )}
 
         {/* Selected Coordinates / Bounds Panel */}
         <div className="flex-grow flex flex-col justify-center my-6">
           <div className="text-xs text-slate-300 font-mono bg-slate-900/60 p-4.5 rounded-lg border border-slate-800/80 w-full min-h-[140px] flex flex-col justify-center">
-            {mode === "point" && selectedCoords ? (
+            {isOverlayMode && analyzedBbox ? (
+              <div className="flex flex-col gap-2">
+                <span className="text-cyan-400 font-bold uppercase text-[9px] tracking-wider">Analyzed Bounds</span>
+                <div className="grid grid-cols-2 gap-x-2 gap-y-3 mt-1">
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">MIN LAT</span>
+                    <span className="text-[11px] text-slate-200">{analyzedBbox.minLat.toFixed(5)}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">MIN LNG</span>
+                    <span className="text-[11px] text-slate-200">{analyzedBbox.minLng.toFixed(5)}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">MAX LAT</span>
+                    <span className="text-[11px] text-slate-200">{analyzedBbox.maxLat.toFixed(5)}</span>
+                  </div>
+                  <div>
+                    <span className="text-[10px] text-slate-500 block">MAX LNG</span>
+                    <span className="text-[11px] text-slate-200">{analyzedBbox.maxLng.toFixed(5)}</span>
+                  </div>
+                </div>
+              </div>
+            ) : mode === "point" && selectedCoords ? (
               <div className="flex flex-col gap-2">
                 <span className="text-cyan-400 font-bold uppercase text-[9px] tracking-wider">Captured Location</span>
                 <div className="grid grid-cols-2 gap-2 mt-1">
@@ -395,28 +506,51 @@ export function MapSelector({ onConfirm, onCancel }: MapSelectorProps) {
 
         {/* Pinned Action Buttons */}
         <div className="flex flex-col gap-2 mt-auto w-full pt-4 border-t border-slate-800/80">
-          <Button
-            onClick={handleConfirm}
-            disabled={loading || (!selectedCoords && !selectedBbox)}
-            className="bg-cyan-600 hover:bg-cyan-700 text-white w-full py-5 text-xs font-semibold"
-          >
-            {loading ? "Capturing..." : "Confirm & Import"}
-          </Button>
-          <Button
-            variant="outline"
-            onClick={onCancel}
-            disabled={loading}
-            className="border-slate-700 text-slate-300 hover:bg-slate-900 w-full py-5 text-xs"
-          >
-            Cancel
-          </Button>
+          {isOverlayMode ? (
+            <Button
+              onClick={onCancel}
+              className="bg-slate-800 hover:bg-slate-700 text-slate-100 w-full py-5 text-xs font-semibold border border-slate-700"
+            >
+              Close Overlay View
+            </Button>
+          ) : (
+            <>
+              <Button
+                onClick={handleConfirm}
+                disabled={loading || (!selectedCoords && !selectedBbox)}
+                className="bg-cyan-600 hover:bg-cyan-700 text-white w-full py-5 text-xs font-semibold"
+              >
+                {loading ? "Capturing..." : "Confirm & Import"}
+              </Button>
+              <Button
+                variant="outline"
+                onClick={onCancel}
+                disabled={loading}
+                className="border-slate-700 text-slate-300 hover:bg-slate-900 w-full py-5 text-xs"
+              >
+                Cancel
+              </Button>
+            </>
+          )}
         </div>
 
       </div>
 
       {/* RIGHT MAP PANEL */}
-      <div className="flex-grow h-full w-full relative min-h-[300px]">
-        <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
+      <div className="flex-grow h-full w-full relative min-h-[300px] flex flex-col">
+        {isOverlayMode && (
+          <div className="bg-slate-950 border-b border-slate-800 p-2.5 flex justify-end items-center z-10">
+            <Button
+              onClick={() => setShowOverlay(!showOverlay)}
+              className={`text-xs px-4 py-2 font-mono tracking-wider uppercase transition-colors ${showOverlay ? "bg-cyan-600 hover:bg-cyan-700 text-white" : "border border-slate-700 text-slate-300 hover:bg-slate-800"}`}
+            >
+              🌊 {showOverlay ? "Hide Flood Overlay" : "Show Flood Overlay"}
+            </Button>
+          </div>
+        )}
+        <div className="flex-grow relative w-full h-full">
+          <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
+        </div>
       </div>
 
     </div>
