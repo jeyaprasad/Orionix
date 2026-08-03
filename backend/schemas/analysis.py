@@ -116,6 +116,14 @@ class AnalysisResponse(BaseModel):
         None,
         description="One-line reasoning explaining the flood risk assessment."
     )
+    external_advisory_match: Optional[bool] = Field(
+        None,
+        description="Indicates if region matches an active GDACS flood advisory."
+    )
+    external_advisory_summary: Optional[str] = Field(
+        None,
+        description="Description summary of the matching active disaster alert."
+    )
 
     # --- Frontend-compatible fields (mirrors the existing UI contract) ---
     insight: str = Field(

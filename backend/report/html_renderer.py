@@ -120,11 +120,19 @@ class HTMLRenderer:
         lat = analysis_dict.get("latitude")
         lng = analysis_dict.get("longitude")
         bbox_val = analysis_dict.get("bbox")
+        advisory_match = analysis_dict.get("external_advisory_match")
+
+        advisory_text = ""
+        if advisory_match is not None:
+            if advisory_match:
+                advisory_text = '<div style="color: #ff3366; font-size: 10px; font-family: Arial, sans-serif; margin-top: 2px; font-weight: bold;">Matches an active GDACS flood advisory for this region</div>'
+            else:
+                advisory_text = '<div style="color: #a09cb4; font-size: 10px; font-family: Arial, sans-serif; margin-top: 2px;">No matching external advisory &mdash; localized detection only.</div>'
 
         if lat is not None and lng is not None:
             lat_dir = "N" if lat >= 0 else "S"
             lng_dir = "E" if lng >= 0 else "W"
-            location_html = f'<div class="gen-date" style="margin-top: 4px;">Location: {abs(lat):.4f}&deg; {lat_dir}, {abs(lng):.4f}&deg; {lng_dir}</div>'
+            location_html = f'<div class="gen-date" style="margin-top: 4px;">Location: {abs(lat):.4f}&deg; {lat_dir}, {abs(lng):.4f}&deg; {lng_dir}</div>{advisory_text}'
         elif bbox_val and len(bbox_val) == 4:
             min_lat, min_lng, max_lat, max_lng = bbox_val
             min_lat_dir = "N" if min_lat >= 0 else "S"
@@ -135,7 +143,7 @@ class HTMLRenderer:
                 f'<div class="gen-date" style="margin-top: 4px;">'
                 f'Location Box: [{abs(min_lat):.4f}&deg; {min_lat_dir}, {abs(min_lng):.4f}&deg; {min_lng_dir}] to '
                 f'[{abs(max_lat):.4f}&deg; {max_lat_dir}, {abs(max_lng):.4f}&deg; {max_lng_dir}]'
-                f'</div>'
+                f'</div>{advisory_text}'
             )
 
         html = f"""<!DOCTYPE html>

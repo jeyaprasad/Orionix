@@ -3,7 +3,7 @@ import { n as AnimatePresence, t as motion } from "../_libs/framer-motion.mjs";
 import { n as require_react } from "../_libs/@radix-ui/react-compose-refs+[...].mjs";
 import { h as Link } from "../_libs/@tanstack/react-router+[...].mjs";
 import { n as require_jsx_runtime } from "../_libs/react+tanstack__react-query.mjs";
-import "./router-CGg5CKCm.mjs";
+import "./router-B0Hcz6uf.mjs";
 import { t as imageCompression } from "../_libs/browser-image-compression.mjs";
 import { t as Markdown } from "../_libs/react-markdown+[...].mjs";
 import { t as remarkGfm } from "../_libs/remark-gfm.mjs";
@@ -13,7 +13,7 @@ import { n as polygon, t as bbox } from "../_libs/@turf/bbox+[...].mjs";
 import { t as Slot } from "../_libs/radix-ui__react-slot.mjs";
 import { n as clsx, t as cva } from "../_libs/class-variance-authority+clsx.mjs";
 import { t as twMerge } from "../_libs/tailwind-merge.mjs";
-//#region node_modules/.nitro/vite/services/ssr/assets/aichat-Bi_E4O6Y.js
+//#region node_modules/.nitro/vite/services/ssr/assets/aichat-DuidJ8jD.js
 var import_react = /* @__PURE__ */ __toESM(require_react());
 var import_jsx_runtime = require_jsx_runtime();
 var import_maplibre_gl = /* @__PURE__ */ __toESM(require_maplibre_gl());
@@ -311,6 +311,144 @@ var PipelineVisualizer = ({ stageIndex, status }) => {
 		})
 	});
 };
+function FloodSeverityBadge({ riskLabel, riskScore, externalAdvisoryMatch, waterCoveragePercent }) {
+	const label = riskLabel.trim().toLowerCase();
+	let badgeStyle = {};
+	if (label === "low") badgeStyle = {
+		color: "#00e5a0",
+		backgroundColor: "#00e5a026",
+		border: "1px solid #00e5a04d"
+	};
+	else if (label === "moderate") badgeStyle = {
+		color: "#fbbf24",
+		backgroundColor: "#fbbf2426",
+		border: "1px solid #fbbf244d"
+	};
+	else if (label === "high") badgeStyle = {
+		color: "#f97316",
+		backgroundColor: "#f9731626",
+		border: "1px solid #f973164d"
+	};
+	else if (label === "severe") badgeStyle = {
+		color: "#ff4e6a",
+		backgroundColor: "#ff4e6a26",
+		border: "1px solid #ff4e6a4d"
+	};
+	else badgeStyle = {
+		color: "#38bdf8",
+		backgroundColor: "#38bdf826",
+		border: "1px solid #38bdf84d"
+	};
+	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+		style: {
+			display: "flex",
+			flexDirection: "column",
+			gap: "8px",
+			margin: "10px 0"
+		},
+		children: [
+			/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				style: {
+					display: "flex",
+					alignItems: "center",
+					gap: "16px",
+					flexWrap: "wrap"
+				},
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					style: {
+						borderRadius: "9999px",
+						padding: "6px 14px",
+						fontFamily: "Space Mono, monospace",
+						fontSize: "0.75rem",
+						fontWeight: 600,
+						textTransform: "uppercase",
+						letterSpacing: "0.05em",
+						width: "fit-content",
+						...badgeStyle
+					},
+					children: [riskLabel, " Risk"]
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+					style: {
+						display: "flex",
+						flexDirection: "column"
+					},
+					children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						style: {
+							fontSize: "0.68rem",
+							color: "#f8fafc8c",
+							textTransform: "uppercase",
+							fontFamily: "Space Mono, monospace",
+							letterSpacing: "0.05em"
+						},
+						children: "Flood Severity Score"
+					}), /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("span", {
+						style: {
+							fontSize: "0.85rem",
+							fontWeight: 700,
+							color: "#f8fafc",
+							fontFamily: "Space Mono, monospace"
+						},
+						children: [riskScore.toFixed(1), " / 100"]
+					})]
+				})]
+			}),
+			externalAdvisoryMatch && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+				style: {
+					fontSize: "0.75rem",
+					color: "#ff4e6a",
+					fontWeight: 500,
+					display: "flex",
+					alignItems: "center",
+					gap: "4px",
+					fontFamily: "system-ui, sans-serif",
+					marginTop: "2px"
+				},
+				children: "⚠ Matches active GDACS advisory"
+			}),
+			waterCoveragePercent !== void 0 && waterCoveragePercent !== null && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
+				style: {
+					display: "flex",
+					flexDirection: "column",
+					gap: "4px",
+					marginTop: "4px",
+					maxWidth: "250px",
+					width: "100%"
+				},
+				children: [/* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					style: {
+						display: "flex",
+						justifyContent: "space-between",
+						alignItems: "center"
+					},
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("span", {
+						style: {
+							fontSize: "0.68rem",
+							color: "#f8fafc8c",
+							textTransform: "uppercase",
+							fontFamily: "Space Mono, monospace"
+						},
+						children: "Water Coverage Fill"
+					})
+				}), /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					style: {
+						width: "100%",
+						height: "4px",
+						backgroundColor: "#ffffff1a",
+						borderRadius: "2px",
+						overflow: "hidden"
+					},
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", { style: {
+						width: `${Math.min(waterCoveragePercent, 100)}%`,
+						height: "100%",
+						backgroundColor: "#00e5c8",
+						borderRadius: "2px",
+						transition: "width 0.4s ease-out"
+					} })
+				})]
+			})
+		]
+	});
+}
 function ErrorFallback({ error, resetErrorBoundary }) {
 	return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 		className: "cb-input-error",
@@ -435,6 +573,19 @@ var AnalysisResults = (0, import_react.memo)(({ result, askInsight, insightLoadi
 				margin: "0 auto"
 			},
 			children: [
+				result.flood_risk_label && /* @__PURE__ */ (0, import_jsx_runtime.jsx)("div", {
+					style: {
+						borderBottom: "1px solid #334155",
+						paddingBottom: "14px",
+						marginBottom: "14px"
+					},
+					children: /* @__PURE__ */ (0, import_jsx_runtime.jsx)(FloodSeverityBadge, {
+						riskLabel: result.flood_risk_label,
+						riskScore: result.flood_risk_score ?? 0,
+						externalAdvisoryMatch: result.external_advisory_match,
+						waterCoveragePercent: result.water_coverage_percent
+					})
+				}),
 				/* @__PURE__ */ (0, import_jsx_runtime.jsxs)("div", {
 					style: {
 						display: "flex",

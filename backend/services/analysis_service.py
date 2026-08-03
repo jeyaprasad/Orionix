@@ -34,6 +34,7 @@ from backend.vision.remoteclip import remoteclip_service
 from backend.interpreter.eo_interpreter import interpret
 from backend.interpreter.eo_schema import SimilarityEntry
 from backend.interpreter.eo_rules import compute_flood_risk_score
+from backend.services.disaster_feed import query_gdacs_flood_alerts
 
 from backend.prompts.prompt_builder import prompt_builder
 from backend.schemas.prompt import EOContext
@@ -243,6 +244,19 @@ class AnalysisService:
             "recommendations": claude_json.get("recommendations", fallback_json["recommendations"])[:4]
         }
 
+        # Determine location for external disaster alerts check
+        target_lat = latitude
+        target_lng = longitude
+        if target_lat is None and target_lng is None and bbox and len(bbox) == 4:
+            target_lat = (bbox[0] + bbox[2]) / 2.0
+            target_lng = (bbox[1] + bbox[3]) / 2.0
+
+        advisory_match = False
+        advisory_summary = None
+
+        if target_lat is not None and target_lng is not None:
+            advisory_match, advisory_summary = query_gdacs_flood_alerts(target_lat, target_lng)
+
         # Always construct the Unified report HTML using html_renderer
         try:
             img_b64 = base64.b64encode(image_bytes).decode("utf-8") if image_bytes else None
@@ -256,6 +270,8 @@ class AnalysisService:
                 "latitude": latitude,
                 "longitude": longitude,
                 "bbox": bbox,
+                "external_advisory_match": advisory_match,
+                "external_advisory_summary": advisory_summary,
             }
             professional_report = html_renderer.render(mock_resp_data, merged_json, img_b64)
             logger.info("[analyze_image] Stage 6.5: Unified HTML generated successfully.")
@@ -310,6 +326,8 @@ class AnalysisService:
             flood_risk_score=flood_risk["risk_score"],
             flood_risk_label=flood_risk["risk_label"],
             flood_risk_reasoning=flood_risk["reasoning"],
+            external_advisory_match=advisory_match,
+            external_advisory_summary=advisory_summary,
             latitude=latitude,
             longitude=longitude,
             bbox=bbox,

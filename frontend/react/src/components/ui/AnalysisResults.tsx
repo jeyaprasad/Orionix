@@ -1,6 +1,7 @@
 import React, { memo, useState } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 import { AnalysisResult } from "../../hooks/useAnalysis";
+import { FloodSeverityBadge } from "./FloodSeverityBadge";
 
 function ErrorFallback({ error, resetErrorBoundary }: any) {
   return (
@@ -91,6 +92,17 @@ export const AnalysisResults = memo(({ result, askInsight, insightLoading }: Ana
       )}
 
       <div className="cb-report-card orionix-reveal orionix-in" style={{ padding: "10px", width: "100%", maxWidth: "1200px", margin: "0 auto" }}>
+
+        {result.flood_risk_label && (
+          <div style={{ borderBottom: '1px solid #334155', paddingBottom: '14px', marginBottom: '14px' }}>
+            <FloodSeverityBadge
+              riskLabel={result.flood_risk_label}
+              riskScore={result.flood_risk_score ?? 0}
+              externalAdvisoryMatch={result.external_advisory_match}
+              waterCoveragePercent={result.water_coverage_percent}
+            />
+          </div>
+        )}
 
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px', gap: '10px' }}>
           <button

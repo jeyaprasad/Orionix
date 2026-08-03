@@ -38,6 +38,11 @@ export interface AnalysisResult {
   latitude?: number;
   longitude?: number;
   bbox?: number[];
+  flood_risk_score?: number;
+  flood_risk_label?: string;
+  flood_risk_reasoning?: string;
+  external_advisory_match?: boolean;
+  external_advisory_summary?: string;
 }
 
 export interface ChatMessage {
