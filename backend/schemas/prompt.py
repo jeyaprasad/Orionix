@@ -63,6 +63,10 @@ class EOContext(BaseModel):
         None,
         description="Computed deforestation delta percentage (change between pre and post scenes).",
     )
+    mode: Optional[str] = Field(
+        None,
+        description="The analysis mode selected by the user: auto | flood | deforestation | urban | agriculture",
+    )
 
     @field_validator("dominant_land_cover")
     @classmethod
