@@ -80,6 +80,7 @@ class AnalysisService:
         longitude: Optional[float] = None,
         bbox: Optional[list[float]] = None,
         deforestation_delta: Optional[float] = None,
+        mode: Optional[str] = None,
     ) -> AnalysisResponse:
         """
         Execute the full EO analysis pipeline on an uploaded image.
@@ -158,6 +159,7 @@ class AnalysisService:
             vegetation_index_score=eo_result.vegetation_health_score,
             urban_density_percent=urban_density_percent,
             deforestation_delta=deforestation_delta,
+            mode=mode,
         )
         prompt_payload = prompt_builder.build_prompt(eo_ctx)
         logger.info("[analyze_image] Stage 5: Prompt payload ready.")

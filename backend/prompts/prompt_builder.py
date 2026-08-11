@@ -88,6 +88,7 @@ class PromptBuilder:
             vegetation_index_score=eo_context.vegetation_index_score,
             urban_density_percent=eo_context.urban_density_percent,
             deforestation_delta=eo_context.deforestation_delta,
+            mode=eo_context.mode,
         )
 
         elapsed_ms = (time.perf_counter() - start) * 1000
@@ -223,6 +224,7 @@ class PromptBuilder:
         vegetation_index_score: Optional[float] = None,
         urban_density_percent: Optional[float] = None,
         deforestation_delta: Optional[float] = None,
+        mode: Optional[str] = None,
     ) -> str:
         """
         Populates USER_PROMPT_TEMPLATE with the provided EO field values.
@@ -232,7 +234,7 @@ class PromptBuilder:
         urban_val = f"{urban_density_percent:.2f}%" if urban_density_percent is not None else "Not applicable"
         deforest_val = f"{deforestation_delta:.2f}%" if deforestation_delta is not None else "Not applicable"
 
-        return USER_PROMPT_TEMPLATE.format(
+        base_prompt = USER_PROMPT_TEMPLATE.format(
             dominant_land_cover=dominant,
             secondary_land_cover=secondary,
             confidence=confidence,
@@ -242,6 +244,18 @@ class PromptBuilder:
             urban_density_percent=urban_val,
             deforestation_delta=deforest_val,
         )
+
+        mode_instructions = ""
+        if mode == "flood":
+            mode_instructions = "\n\nFOCUS DIRECTIVE: This report is specifically focused on Flood & Water hazard analysis. Prioritize assessing the water coverage metrics, flood severity level, and potential hazard impact. Base your explanation heavily on the water coverage measurement."
+        elif mode == "deforestation":
+            mode_instructions = "\n\nFOCUS DIRECTIVE: This report is specifically focused on Deforestation & Canopy loss analysis. Prioritize assessing the deforestation delta metric, vegetation index measurements, and forest canopy health. Highlight the change over time."
+        elif mode == "urban":
+            mode_instructions = "\n\nFOCUS DIRECTIVE: This report is specifically focused on Urban Sprawl & Built-up expansion analysis. Prioritize assessing the urban density index, infrastructure coverage, and impervious surface metrics."
+        elif mode == "agriculture":
+            mode_instructions = "\n\nFOCUS DIRECTIVE: This report is specifically focused on Agricultural Vitality & Vegetation health analysis. Prioritize assessing the vegetation index score, crop vitality, and agricultural area health."
+
+        return base_prompt + mode_instructions
 
 
 # ---------------------------------------------------------------------------
