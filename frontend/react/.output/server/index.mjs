@@ -15,17 +15,10 @@ globalThis.__nitro_vite_envs__ = services;
 //#endregion
 //#region #nitro/virtual/public-assets-data
 var public_assets_data_default = {
-	"/assets/aichat-B2k4QVOw.css": {
-		"type": "text/css; charset=utf-8",
-		"etag": "\"110b0-ktCrTpfc4yMYyf4bIOXbtYXFctY\"",
-		"mtime": "2026-08-03T15:10:04.082Z",
-		"size": 69808,
-		"path": "../public/assets/aichat-B2k4QVOw.css"
-	},
 	"/assets/index-DuJfrJqO.css": {
 		"type": "text/css; charset=utf-8",
 		"etag": "\"7754-9HUN7uFycQZBCvlQ/uqBLhMMayU\"",
-		"mtime": "2026-08-03T15:10:04.085Z",
+		"mtime": "2026-08-11T14:33:44.382Z",
 		"size": 30548,
 		"path": "../public/assets/index-DuJfrJqO.css"
 	},
@@ -39,28 +32,35 @@ var public_assets_data_default = {
 	"/assets/routes-CWNfMPJ4.js": {
 		"type": "text/javascript; charset=utf-8",
 		"etag": "\"3225-dbRy4vny0cvjTdjjWyhwqAP0YrU\"",
-		"mtime": "2026-08-03T15:10:04.079Z",
+		"mtime": "2026-08-11T14:33:44.381Z",
 		"size": 12837,
 		"path": "../public/assets/routes-CWNfMPJ4.js"
 	},
 	"/assets/styles-C7DBVWEP.css": {
 		"type": "text/css; charset=utf-8",
 		"etag": "\"12607-53usFwCqxNEGY18BjVlWhtK8pvY\"",
-		"mtime": "2026-08-03T15:10:04.087Z",
+		"mtime": "2026-08-11T14:33:44.382Z",
 		"size": 75271,
 		"path": "../public/assets/styles-C7DBVWEP.css"
+	},
+	"/assets/aichat-B2k4QVOw.css": {
+		"type": "text/css; charset=utf-8",
+		"etag": "\"110b0-ktCrTpfc4yMYyf4bIOXbtYXFctY\"",
+		"mtime": "2026-08-11T14:33:44.381Z",
+		"size": 69808,
+		"path": "../public/assets/aichat-B2k4QVOw.css"
 	},
 	"/assets/index-DZFCcwsy.js": {
 		"type": "text/javascript; charset=utf-8",
 		"etag": "\"5435a-lSUk9d1shHbJEjce3SYqVtMIt7s\"",
-		"mtime": "2026-08-03T15:10:04.073Z",
+		"mtime": "2026-08-11T14:33:44.379Z",
 		"size": 344922,
 		"path": "../public/assets/index-DZFCcwsy.js"
 	},
 	"/assets/aichat-pVfxwloU.js": {
 		"type": "text/javascript; charset=utf-8",
 		"etag": "\"15bd50-InoDQFsR/Fvb8u6mXiCP1zZozO4\"",
-		"mtime": "2026-08-03T15:10:04.076Z",
+		"mtime": "2026-08-11T14:33:44.381Z",
 		"size": 1424720,
 		"path": "../public/assets/aichat-pVfxwloU.js"
 	}

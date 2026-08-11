@@ -17,6 +17,7 @@ Constraints enforced by design:
 """
 
 import time
+from typing import Optional
 from backend.prompts.templates import (
     SYSTEM_PROMPT,
     USER_PROMPT_TEMPLATE,
@@ -83,6 +84,10 @@ class PromptBuilder:
             secondary=secondary,
             confidence=eo_context.confidence,
             summary=eo_context.summary,
+            water_coverage_percent=eo_context.water_coverage_percent,
+            vegetation_index_score=eo_context.vegetation_index_score,
+            urban_density_percent=eo_context.urban_density_percent,
+            deforestation_delta=eo_context.deforestation_delta,
         )
 
         elapsed_ms = (time.perf_counter() - start) * 1000
@@ -160,6 +165,15 @@ class PromptBuilder:
         if not ctx.summary or not ctx.summary.strip():
             issues.append("summary is missing or blank")
 
+        if ctx.water_coverage_percent is not None and not (0.0 <= ctx.water_coverage_percent <= 100.0):
+            issues.append(f"water_coverage_percent must be between 0 and 100, got {ctx.water_coverage_percent}")
+
+        if ctx.vegetation_index_score is not None and not (0.0 <= ctx.vegetation_index_score <= 100.0):
+            issues.append(f"vegetation_index_score must be between 0 and 100, got {ctx.vegetation_index_score}")
+
+        if ctx.urban_density_percent is not None and not (0.0 <= ctx.urban_density_percent <= 100.0):
+            issues.append(f"urban_density_percent must be between 0 and 100, got {ctx.urban_density_percent}")
+
         if issues:
             msg = f"EOContext validation failed: {'; '.join(issues)}."
             logger.warning(f"Prompt generation aborted — {msg}")
@@ -205,24 +219,28 @@ class PromptBuilder:
         secondary: str,
         confidence: str,
         summary: str,
+        water_coverage_percent: Optional[float] = None,
+        vegetation_index_score: Optional[float] = None,
+        urban_density_percent: Optional[float] = None,
+        deforestation_delta: Optional[float] = None,
     ) -> str:
         """
         Populates USER_PROMPT_TEMPLATE with the provided EO field values.
-
-        Args:
-            dominant:   Dominant land-cover category name.
-            secondary:  Secondary land-cover category name (already normalised).
-            confidence: Relative confidence band string.
-            summary:    Rule-based scene summary from the EO interpreter.
-
-        Returns:
-            The fully populated user prompt string.
         """
+        water_val = f"{water_coverage_percent:.2f}%" if water_coverage_percent is not None else "Not applicable"
+        veg_val = f"{vegetation_index_score:.2f} / 100" if vegetation_index_score is not None else "Not applicable"
+        urban_val = f"{urban_density_percent:.2f}%" if urban_density_percent is not None else "Not applicable"
+        deforest_val = f"{deforestation_delta:.2f}%" if deforestation_delta is not None else "Not applicable"
+
         return USER_PROMPT_TEMPLATE.format(
             dominant_land_cover=dominant,
             secondary_land_cover=secondary,
             confidence=confidence,
             summary=summary,
+            water_coverage_percent=water_val,
+            vegetation_index_score=veg_val,
+            urban_density_percent=urban_val,
+            deforestation_delta=deforest_val,
         )
 
 

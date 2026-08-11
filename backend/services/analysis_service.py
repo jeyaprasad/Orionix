@@ -79,6 +79,7 @@ class AnalysisService:
         latitude: Optional[float] = None,
         longitude: Optional[float] = None,
         bbox: Optional[list[float]] = None,
+        deforestation_delta: Optional[float] = None,
     ) -> AnalysisResponse:
         """
         Execute the full EO analysis pipeline on an uploaded image.
@@ -143,11 +144,20 @@ class AnalysisService:
         # Stage 5 — Build PromptPayload
         # ----------------------------------------------------------------
         logger.info("[analyze_image] Stage 5: Building prompt payload.")
+        raw_outputs_zs = raw_outputs["zero_shot_inspection"]
+        classes = self._build_classes(raw_outputs_zs)
+
+        urban_density_percent = raw_outputs.get("urban_density_percent") or 0.0
+
         eo_ctx = EOContext(
             dominant_land_cover=eo_result.dominant_land_cover,
             secondary_land_cover=eo_result.secondary_land_cover,
             confidence=eo_result.relative_confidence,
             summary=eo_result.summary,
+            water_coverage_percent=raw_outputs.get("water_coverage_percent"),
+            vegetation_index_score=eo_result.vegetation_health_score,
+            urban_density_percent=urban_density_percent,
+            deforestation_delta=deforestation_delta,
         )
         prompt_payload = prompt_builder.build_prompt(eo_ctx)
         logger.info("[analyze_image] Stage 5: Prompt payload ready.")
@@ -168,11 +178,6 @@ class AnalysisService:
         # ----------------------------------------------------------------
         professional_report = None
         report_model_id = None
-        
-        # Build frontend-compatible classes first for HTML renderer
-        # NOTE: Use raw_outputs from Stage 3 directly — do NOT overwrite it.
-        raw_outputs_zs = raw_outputs["zero_shot_inspection"]
-        classes = self._build_classes(raw_outputs_zs)
         
         # Derive risk
         risk_map = {"High": "Low", "Medium": "Medium", "Low": "High"}
@@ -296,7 +301,12 @@ class AnalysisService:
         title = f"{eo_result.dominant_land_cover} Scene Analysis"
 
         # Calculate rule-based flood risk parameters
-        urban_density_val = "High" if "urban" in str(eo_result.dominant_land_cover).lower() or "resid" in str(eo_result.dominant_land_cover).lower() else "Low"
+        if urban_density_percent > 25.0:
+            urban_density_val = "High"
+        elif urban_density_percent > 8.0:
+            urban_density_val = "Medium"
+        else:
+            urban_density_val = "Low"
         agricultural_presence_val = "High" if "forest" in str(eo_result.dominant_land_cover).lower() or "agricult" in str(eo_result.dominant_land_cover).lower() or "crop" in str(eo_result.dominant_land_cover).lower() else "Low"
         water_pct_val = raw_outputs.get("water_coverage_percent") or 0.0
 

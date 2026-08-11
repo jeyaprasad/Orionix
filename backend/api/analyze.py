@@ -17,11 +17,12 @@ import time
 import json
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException, status
 from typing import Optional
-from backend.schemas.analysis import AnalysisResponse, FloodComparisonResponse
+from backend.schemas.analysis import AnalysisResponse, FloodComparisonResponse, VegetationComparisonResponse
 from backend.services.analysis_service import analysis_service
 from backend.utils.logger import logger
 from backend.vision.water_detection import detect_water_extent
 from backend.vision.image_loader import validate_and_load_image
+from backend.vision.vegetation_index import compute_vegetation_index
 
 router = APIRouter(prefix="/api", tags=["Analysis"])
 
@@ -242,3 +243,101 @@ async def compare_flood(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="An unexpected error occurred during flood comparison.",
         )
+
+
+@router.post(
+    "/analyze/compare",
+    response_model=VegetationComparisonResponse,
+    summary="Compare baseline and current images for vegetation delta",
+    description=(
+        "Upload a 'baseline' satellite image and a 'current' satellite image. "
+        "Runs the Excess Green Index on both and computes the deforestation delta."
+    ),
+)
+async def compare_vegetation(
+    baseline: UploadFile = File(...),
+    current: UploadFile = File(...),
+) -> VegetationComparisonResponse:
+    request_start = time.perf_counter()
+    logger.info(
+        f"[/api/analyze/compare] Request received. "
+        f"Baseline: '{baseline.filename}', Current: '{current.filename}'."
+    )
+
+    try:
+        # 1. Read baseline image
+        baseline_bytes = await baseline.read()
+        if not baseline_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Baseline image upload is empty.",
+            )
+        # 2. Read current image
+        current_bytes = await current.read()
+        if not current_bytes:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Current image upload is empty.",
+            )
+        
+        # 3. Validate and load images using unified loader
+        try:
+            baseline_pil = validate_and_load_image(baseline_bytes, baseline.filename or "baseline.jpg")
+        except ValueError as e:
+            logger.warning(f"[/api/analyze/compare] Baseline image validation failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Baseline image error: {e}",
+            )
+
+        try:
+            current_pil = validate_and_load_image(current_bytes, current.filename or "current.jpg")
+        except ValueError as e:
+            logger.warning(f"[/api/analyze/compare] Current image validation failed: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Current image error: {e}",
+            )
+
+        # 4. Compute Excess Green Index on both
+        baseline_score = compute_vegetation_index(baseline_pil)
+        current_score = compute_vegetation_index(current_pil)
+
+        # 5. Compute deforestation delta (percentage-point drop: baseline - current)
+        delta = baseline_score - current_score
+
+        # 6. Classify
+        if delta < 5.0:
+            classification = "No significant canopy loss"
+        elif 5.0 <= delta < 15.0:
+            classification = "Minor deforestation / canopy degradation"
+        elif 15.0 <= delta <= 30.0:
+            classification = "Moderate deforestation detected"
+        else:
+            classification = "Severe deforestation detected"
+
+        if delta < 0.0:
+            classification = "Vegetation growth / recovery detected"
+
+        total_ms = (time.perf_counter() - request_start) * 1000
+        logger.info(
+            f"[/api/analyze/compare] Completed in {total_ms:.0f}ms. "
+            f"Baseline={baseline_score:.2f}%, Current={current_score:.2f}%, Delta={delta:.2f}%, Class={classification}."
+        )
+
+        return VegetationComparisonResponse(
+            baseline_vegetation_index_score=baseline_score,
+            current_vegetation_index_score=current_score,
+            deforestation_delta=round(delta, 2),
+            classification=classification,
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"[/api/analyze/compare] Unexpected error: {type(e).__name__}: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="An unexpected error occurred during vegetation comparison.",
+        )
+

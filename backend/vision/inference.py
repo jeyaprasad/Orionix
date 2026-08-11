@@ -5,7 +5,9 @@ import numpy as np
 from PIL import Image
 from typing import Dict, Any
 from backend.vision.remoteclip import remoteclip_service
-from backend.vision.preprocessing import preprocess_image, compute_vegetation_health_score, detect_water_extent
+from backend.vision.preprocessing import preprocess_image, detect_water_extent
+from backend.vision.vegetation_index import compute_vegetation_index
+from backend.vision.urban_density import compute_urban_density
 from backend.utils.logger import logger
 
 from backend.vision.labels import ZERO_SHOT_LABELS
@@ -19,11 +21,14 @@ def run_mock_inference(image: Image.Image) -> Dict[str, Any]:
     """
     start_time = time.time()
     
-    # 1. Compute lightweight vegetation health score proxy
-    veg_score = compute_vegetation_health_score(image)
+    # 1. Compute Excess Green Index vegetation score proxy
+    vegetation_index_score = compute_vegetation_index(image)
     
     # Run water detection
     water_coverage_percent, water_mask_base64 = detect_water_extent(image)
+    
+    # Run built-up urban density detection
+    urban_density_percent = compute_urban_density(image)
     
     # 2. Extract basic RGB statistics
     try:
@@ -41,7 +46,7 @@ def run_mock_inference(image: Image.Image) -> Dict[str, Any]:
     
     # Green-dominated scene
     if g_mean > r_mean and g_mean > b_mean:
-        if veg_score > 40.0:
+        if vegetation_index_score > 40.0:
             scores["satellite imagery of dense forest"] = 0.32
             scores["satellite imagery of agricultural farmland"] = 0.28
         else:
@@ -91,10 +96,12 @@ def run_mock_inference(image: Image.Image) -> Dict[str, Any]:
             "l2_norm": 1.0
         },
         "zero_shot_inspection": zero_shot,
-        "vegetation_health_score": veg_score,
+        "vegetation_health_score": vegetation_index_score,
+        "vegetation_index_score": vegetation_index_score,
         "vegetation_health_disclaimer": "proxy index from RGB imagery, not true NDVI (requires NIR band data)",
         "water_coverage_percent": water_coverage_percent,
         "water_mask_base64": water_mask_base64,
+        "urban_density_percent": urban_density_percent,
         "performance": {
             "inference_time_ms": inference_time_ms,
             "total_time_ms": total_time_ms
@@ -158,11 +165,14 @@ def run_remoteclip_inference(image: Image.Image) -> Dict[str, Any]:
     # Convert embedding sample to standard python list (first 10 floats)
     embedding_sample = image_features.squeeze(0)[:10].cpu().tolist()
 
-    # Calculate lightweight vegetation health score proxy
-    veg_score = compute_vegetation_health_score(image)
+    # Calculate Excess Green Index vegetation score proxy
+    vegetation_index_score = compute_vegetation_index(image)
     
     # Run water detection
     water_coverage_percent, water_mask_base64 = detect_water_extent(image)
+    
+    # Run built-up urban density detection
+    urban_density_percent = compute_urban_density(image)
 
     return {
         "embedding_shape": embedding_shape,
@@ -180,10 +190,12 @@ def run_remoteclip_inference(image: Image.Image) -> Dict[str, Any]:
             }
             for i in range(len(CANDIDATE_TAGS))
         ],
-        "vegetation_health_score": veg_score,
+        "vegetation_health_score": vegetation_index_score,
+        "vegetation_index_score": vegetation_index_score,
         "vegetation_health_disclaimer": "proxy index from RGB imagery, not true NDVI (requires NIR band data)",
         "water_coverage_percent": water_coverage_percent,
         "water_mask_base64": water_mask_base64,
+        "urban_density_percent": urban_density_percent,
         "performance": {
             "inference_time_ms": inference_time_ms,
             "total_time_ms": total_time_ms

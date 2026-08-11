@@ -167,3 +167,14 @@ class FloodComparisonResponse(BaseModel):
     classification: str = Field(..., description="Flood classification outcome based on change delta.")
     before_water_mask_base64: str = Field(..., description="Base64 encoded PNG water mask for the before image.")
     after_water_mask_base64: str = Field(..., description="Base64 encoded PNG water mask for the after image.")
+
+
+class VegetationComparisonResponse(BaseModel):
+    """
+    Response schema for POST /api/analyze/compare.
+    """
+    baseline_vegetation_index_score: float = Field(..., description="Excess Green Index score for the baseline image.")
+    current_vegetation_index_score: float = Field(..., description="Excess Green Index score for the current image.")
+    deforestation_delta: float = Field(..., description="Percentage-point drop in vegetation (baseline - current).")
+    classification: str = Field(..., description="Vegetation change classification outcome based on the delta.")
+

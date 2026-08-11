@@ -45,6 +45,24 @@ class EOContext(BaseModel):
         description="Rule-based scene summary text produced by the EO interpreter.",
         min_length=1,
     )
+    water_coverage_percent: Optional[float] = Field(
+        None,
+        description="Computed water coverage percentage.",
+    )
+    vegetation_index_score: Optional[float] = Field(
+        None,
+        description="Computed vegetation health score (0-100).",
+        ge=0.0,
+        le=100.0,
+    )
+    urban_density_percent: Optional[float] = Field(
+        None,
+        description="Computed urban/settlement density percentage.",
+    )
+    deforestation_delta: Optional[float] = Field(
+        None,
+        description="Computed deforestation delta percentage (change between pre and post scenes).",
+    )
 
     @field_validator("dominant_land_cover")
     @classmethod

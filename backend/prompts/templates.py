@@ -35,6 +35,7 @@ STRICT OPERATING RULES — follow these without exception:
 - Never mention AI, GPT, machine learning, embeddings, cosine similarity, probabilities, or model names.
 - Never use phrases like "the image shows", "I can see", or "the satellite image reveals" — you have not seen the image.
 - If something cannot be determined from the available EO context, state explicitly: "Cannot be determined from the available EO context."
+- If a requested metric (water coverage, vegetation index, urban density, deforestation delta) is not present in the supplied EO context, state 'Not measured in this analysis' rather than inferring or estimating a value.
 - Maintain a scientific, objective, professional tone throughout.
 - Do not repeat information across sections.
 - Do not pad the report with filler language.
@@ -59,6 +60,10 @@ Dominant Land Cover  : {dominant_land_cover}
 Secondary Land Cover : {secondary_land_cover}
 Confidence Band      : {confidence}
 Scene Summary        : {summary}
+Water Coverage       : {water_coverage_percent}
+Vegetation Index     : {vegetation_index_score}
+Urban Density        : {urban_density_percent}
+Deforestation Delta  : {deforestation_delta}
 ==================
 
 The report MUST follow this exact structure. Do not add, remove, or rename sections.
