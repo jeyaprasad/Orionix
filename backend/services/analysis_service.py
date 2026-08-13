@@ -28,6 +28,7 @@ from typing import Optional
 from PIL import Image
 
 from backend.vision.image_loader import validate_and_load_image
+from backend.vision.geo_loader import load_geotiff
 from backend.vision.inference import run_remoteclip_inference
 from backend.vision.remoteclip import remoteclip_service
 
@@ -80,6 +81,8 @@ class AnalysisService:
         longitude: Optional[float] = None,
         bbox: Optional[list[float]] = None,
         deforestation_delta: Optional[float] = None,
+        vegetation_delta: Optional[float] = None,
+        urban_density_delta: Optional[float] = None,
         mode: Optional[str] = None,
     ) -> AnalysisResponse:
         """
@@ -104,7 +107,29 @@ class AnalysisService:
         # Stage 1 — Image loading and validation
         # ----------------------------------------------------------------
         logger.info("[analyze_image] Stage 1: Loading and validating image.")
-        pil_image = self._load_image(image_bytes, filename)
+        geotiff_data = load_geotiff(image_bytes, filename)
+        if geotiff_data:
+            pil_image = geotiff_data["pil_image"]
+            true_ndvi = geotiff_data["true_ndvi"]
+            geo_metadata = geotiff_data["geo_metadata"]
+            index_type = geotiff_data["index_type"]
+            
+            # Resolve coordinates from WGS84 GeoTIFF metadata if not provided by caller
+            crs_str = geo_metadata.get("crs", "").lower()
+            is_wgs84 = "4326" in crs_str or "wgs 84" in crs_str or "wgs84" in crs_str or "geographic" in crs_str
+            if is_wgs84 and geo_metadata.get("bounds"):
+                b = geo_metadata["bounds"]
+                if bbox is None:
+                    bbox = [b["bottom"], b["left"], b["top"], b["right"]]
+                if latitude is None:
+                    latitude = (b["bottom"] + b["top"]) / 2.0
+                if longitude is None:
+                    longitude = (b["left"] + b["right"]) / 2.0
+        else:
+            pil_image = self._load_image(image_bytes, filename)
+            true_ndvi = None
+            geo_metadata = None
+            index_type = "RGB proxy index"
         logger.info("[analyze_image] Stage 1: Image loaded successfully.")
 
         # ----------------------------------------------------------------
@@ -123,6 +148,10 @@ class AnalysisService:
         # ----------------------------------------------------------------
         logger.info("[analyze_image] Stage 3: Running RemoteCLIP inference.")
         raw_outputs = self.run_remoteclip(pil_image)
+        if true_ndvi is not None:
+            raw_outputs["vegetation_health_score"] = true_ndvi
+            raw_outputs["vegetation_index_score"] = true_ndvi
+            raw_outputs["vegetation_health_disclaimer"] = "True multispectral NDVI index calculated from raw Red and NIR bands."
         logger.info("[analyze_image] Stage 3: RemoteCLIP inference complete.")
 
         # ----------------------------------------------------------------
@@ -150,6 +179,29 @@ class AnalysisService:
 
         urban_density_percent = raw_outputs.get("urban_density_percent") or 0.0
 
+        # Resolve vegetation_delta fallback
+        if vegetation_delta is None and deforestation_delta is not None:
+            vegetation_delta = deforestation_delta
+            
+        # Calculate classifications
+        deforest_class = None
+        if vegetation_delta is not None:
+            if vegetation_delta <= 5.0:
+                deforest_class = "deforestation: stable"
+            elif 5.0 < vegetation_delta <= 15.0:
+                deforest_class = "deforestation: declining"
+            else:
+                deforest_class = "deforestation: critical"
+
+        urban_growth_class = None
+        if urban_density_delta is not None:
+            if urban_density_delta <= 2.0:
+                urban_growth_class = "urban growth: stable"
+            elif 2.0 < urban_density_delta <= 8.0:
+                urban_growth_class = "urban growth: moderate"
+            else:
+                urban_growth_class = "urban growth: rapid"
+
         eo_ctx = EOContext(
             dominant_land_cover=eo_result.dominant_land_cover,
             secondary_land_cover=eo_result.secondary_land_cover,
@@ -157,8 +209,13 @@ class AnalysisService:
             summary=eo_result.summary,
             water_coverage_percent=raw_outputs.get("water_coverage_percent"),
             vegetation_index_score=eo_result.vegetation_health_score,
+            vegetation_index_type=index_type,
             urban_density_percent=urban_density_percent,
             deforestation_delta=deforestation_delta,
+            vegetation_delta=vegetation_delta,
+            urban_density_delta=urban_density_delta,
+            deforestation_classification=deforest_class,
+            urban_growth_classification=urban_growth_class,
             mode=mode,
         )
         prompt_payload = prompt_builder.build_prompt(eo_ctx)
@@ -332,7 +389,12 @@ class AnalysisService:
             professional_report=professional_report,
             warning=gpt_warning,
             vegetation_health_score=eo_result.vegetation_health_score,
+            vegetation_index_type=index_type,
             deforestation_delta=deforestation_delta,
+            vegetation_delta=vegetation_delta,
+            urban_density_delta=urban_density_delta,
+            deforestation_classification=deforest_class,
+            urban_growth_classification=urban_growth_class,
             vegetation_health_disclaimer=eo_result.vegetation_health_disclaimer,
             water_coverage_percent=raw_outputs.get("water_coverage_percent"),
             water_mask_base64=raw_outputs.get("water_mask_base64"),
@@ -344,6 +406,7 @@ class AnalysisService:
             latitude=latitude,
             longitude=longitude,
             bbox=bbox,
+            geo_metadata=geo_metadata,
             # Frontend-compatible fields
             insight=insight,
             classes=classes,
@@ -362,6 +425,30 @@ class AnalysisService:
                 bbox=bbox,
             ),
         )
+
+        # ------------------------------------------------------------------
+        # Stage 7 — Persist record to SQLite database
+        # ------------------------------------------------------------------
+        try:
+            from backend.db.database import SessionLocal
+            from backend.db.models import AnalysisRecord
+            db = SessionLocal()
+            record = AnalysisRecord(
+                mode=mode or "auto",
+                latitude=latitude,
+                longitude=longitude,
+                image_reference=filename,
+                water_coverage_percent=raw_outputs.get("water_coverage_percent"),
+                vegetation_index_score=eo_result.vegetation_health_score,
+                urban_density_percent=urban_density_percent,
+                risk_level=risk_level,
+            )
+            db.add(record)
+            db.commit()
+            db.close()
+            logger.info("[analyze_image] Successfully persisted analysis record to SQLite.")
+        except Exception as db_err:
+            logger.error(f"[analyze_image] Failed to persist analysis record: {db_err}")
 
         logger.info(
             f"[analyze_image] Pipeline completed in {pipeline_ms:.1f}ms. "

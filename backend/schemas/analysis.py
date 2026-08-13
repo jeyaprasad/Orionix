@@ -92,9 +92,29 @@ class AnalysisResponse(BaseModel):
         None,
         description="Lightweight 0-100 vegetation health score proxy."
     )
+    vegetation_index_type: Optional[str] = Field(
+        None,
+        description="The type of vegetation index used: 'true NDVI (multispectral)' or 'RGB proxy index'."
+    )
     deforestation_delta: Optional[float] = Field(
         None,
         description="Percentage-point drop in vegetation (baseline - current)."
+    )
+    vegetation_delta: Optional[float] = Field(
+        None,
+        description="Percentage-point drop in vegetation (baseline - current)."
+    )
+    urban_density_delta: Optional[float] = Field(
+        None,
+        description="Percentage-point change in urban density (current - baseline)."
+    )
+    deforestation_classification: Optional[str] = Field(
+        None,
+        description="Deforestation classification: stable/declining/critical"
+    )
+    urban_growth_classification: Optional[str] = Field(
+        None,
+        description="Urban growth classification: stable/moderate/rapid"
     )
     vegetation_health_disclaimer: Optional[str] = Field(
         None,
@@ -153,6 +173,7 @@ class AnalysisResponse(BaseModel):
     latitude: Optional[float] = Field(None, description="Captured latitude coordinate.")
     longitude: Optional[float] = Field(None, description="Captured longitude coordinate.")
     bbox: Optional[List[float]] = Field(None, description="Captured bounding box bounds.")
+    geo_metadata: Optional[dict] = Field(None, description="Geospatial metadata dictionary containing CRS, resolution, and bounds.")
 
     # --- Metadata ---
     metadata: AnalysisMetadata = Field(
@@ -181,4 +202,11 @@ class VegetationComparisonResponse(BaseModel):
     current_vegetation_index_score: float = Field(..., description="Excess Green Index score for the current image.")
     deforestation_delta: float = Field(..., description="Percentage-point drop in vegetation (baseline - current).")
     classification: str = Field(..., description="Vegetation change classification outcome based on the delta.")
+    
+    # Extended metrics
+    vegetation_delta: float = Field(..., description="Percentage-point drop in vegetation (baseline - current).")
+    urban_density_delta: float = Field(..., description="Percentage-point change in urban density (current - baseline).")
+    deforestation_classification: str = Field(..., description="Deforestation classification: stable/declining/critical")
+    urban_growth_classification: str = Field(..., description="Urban growth classification: stable/moderate/rapid")
+
 

@@ -63,6 +63,26 @@ class EOContext(BaseModel):
         None,
         description="Computed deforestation delta percentage (change between pre and post scenes).",
     )
+    vegetation_delta: Optional[float] = Field(
+        None,
+        description="Computed vegetation delta percentage.",
+    )
+    urban_density_delta: Optional[float] = Field(
+        None,
+        description="Computed urban density change percentage.",
+    )
+    deforestation_classification: Optional[str] = Field(
+        None,
+        description="Deforestation classification: stable/declining/critical",
+    )
+    urban_growth_classification: Optional[str] = Field(
+        None,
+        description="Urban growth classification: stable/moderate/rapid",
+    )
+    vegetation_index_type: Optional[str] = Field(
+        None,
+        description="The type of vegetation index used: 'true NDVI (multispectral)' or 'RGB proxy index'.",
+    )
     mode: Optional[str] = Field(
         None,
         description="The analysis mode selected by the user: auto | flood | deforestation | urban | agriculture",

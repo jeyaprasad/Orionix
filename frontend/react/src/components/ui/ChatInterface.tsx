@@ -231,7 +231,7 @@ export const ChatInterface = memo(({
                 <input
                   id="file-upload-baseline"
                   type="file"
-                  accept="image/png, image/jpeg"
+                  accept="image/png, image/jpeg, image/tiff, image/x-tiff, image/tif, .tif, .tiff"
                   style={{ display: "none" }}
                   onChange={(e) => handleFile(e.target.files?.[0] || null)}
                 />
@@ -272,7 +272,7 @@ export const ChatInterface = memo(({
                 <input
                   id="file-upload-current"
                   type="file"
-                  accept="image/png, image/jpeg"
+                  accept="image/png, image/jpeg, image/tiff, image/x-tiff, image/tif, .tif, .tiff"
                   style={{ display: "none" }}
                   onChange={(e) => handleSecondFile(e.target.files?.[0] || null)}
                 />
@@ -325,7 +325,7 @@ export const ChatInterface = memo(({
             <input
               id="file-upload"
               type="file"
-              accept="image/png, image/jpeg"
+              accept="image/png, image/jpeg, image/tiff, image/x-tiff, image/tif, .tif, .tiff"
               style={{ display: "none" }}
               onChange={(e) => handleFile(e.target.files?.[0] || null)}
             />

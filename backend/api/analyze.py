@@ -23,6 +23,7 @@ from backend.utils.logger import logger
 from backend.vision.water_detection import detect_water_extent
 from backend.vision.image_loader import validate_and_load_image
 from backend.vision.vegetation_index import compute_vegetation_index
+from backend.vision.urban_density import compute_urban_density
 
 router = APIRouter(prefix="/api", tags=["Analysis"])
 
@@ -47,6 +48,8 @@ async def analyze_image(
     longitude: Optional[float] = Form(None),
     bbox: Optional[str] = Form(None),
     deforestation_delta: Optional[float] = Form(None),
+    vegetation_delta: Optional[float] = Form(None),
+    urban_density_delta: Optional[float] = Form(None),
 ) -> AnalysisResponse:
     """
     POST /api/analyze — production EO analysis endpoint.
@@ -115,6 +118,8 @@ async def analyze_image(
             longitude=longitude,
             bbox=bbox_list,
             deforestation_delta=deforestation_delta,
+            vegetation_delta=vegetation_delta,
+            urban_density_delta=urban_density_delta,
         )
 
     except ValueError as e:
@@ -302,36 +307,50 @@ async def compare_vegetation(
             )
 
         # 4. Compute Excess Green Index on both
-        baseline_score = compute_vegetation_index(baseline_pil)
-        current_score = compute_vegetation_index(current_pil)
+        baseline_veg_score = compute_vegetation_index(baseline_pil)
+        current_veg_score = compute_vegetation_index(current_pil)
+        
+        # Compute Urban Built-up Density on both
+        baseline_urban_score = compute_urban_density(baseline_pil)
+        current_urban_score = compute_urban_density(current_pil)
 
-        # 5. Compute deforestation delta (percentage-point drop: baseline - current)
-        delta = baseline_score - current_score
+        # 5. Compute deltas
+        veg_delta = baseline_veg_score - current_veg_score
+        urb_delta = current_urban_score - baseline_urban_score
 
         # 6. Classify
-        if delta < 5.0:
-            classification = "No significant canopy loss"
-        elif 5.0 <= delta < 15.0:
-            classification = "Minor deforestation / canopy degradation"
-        elif 15.0 <= delta <= 30.0:
-            classification = "Moderate deforestation detected"
+        # Deforestation Classification
+        if veg_delta <= 5.0:
+            deforest_class = "deforestation: stable"
+        elif 5.0 < veg_delta <= 15.0:
+            deforest_class = "deforestation: declining"
         else:
-            classification = "Severe deforestation detected"
+            deforest_class = "deforestation: critical"
 
-        if delta < 0.0:
-            classification = "Vegetation growth / recovery detected"
+        # Urban Growth Classification
+        if urb_delta <= 2.0:
+            urban_growth_class = "urban growth: stable"
+        elif 2.0 < urb_delta <= 8.0:
+            urban_growth_class = "urban growth: moderate"
+        else:
+            urban_growth_class = "urban growth: rapid"
 
         total_ms = (time.perf_counter() - request_start) * 1000
         logger.info(
             f"[/api/analyze/compare] Completed in {total_ms:.0f}ms. "
-            f"Baseline={baseline_score:.2f}%, Current={current_score:.2f}%, Delta={delta:.2f}%, Class={classification}."
+            f"VegDelta={veg_delta:.2f}%, UrbanDelta={urb_delta:.2f}%, "
+            f"DeforestClass='{deforest_class}', UrbanClass='{urban_growth_class}'."
         )
 
         return VegetationComparisonResponse(
-            baseline_vegetation_index_score=baseline_score,
-            current_vegetation_index_score=current_score,
-            deforestation_delta=round(delta, 2),
-            classification=classification,
+            baseline_vegetation_index_score=baseline_veg_score,
+            current_vegetation_index_score=current_veg_score,
+            deforestation_delta=round(veg_delta, 2),
+            classification=deforest_class,
+            vegetation_delta=round(veg_delta, 2),
+            urban_density_delta=round(urb_delta, 2),
+            deforestation_classification=deforest_class,
+            urban_growth_classification=urban_growth_class,
         )
 
     except HTTPException:

@@ -86,6 +86,7 @@ class PromptBuilder:
             summary=eo_context.summary,
             water_coverage_percent=eo_context.water_coverage_percent,
             vegetation_index_score=eo_context.vegetation_index_score,
+            vegetation_index_type=eo_context.vegetation_index_type,
             urban_density_percent=eo_context.urban_density_percent,
             deforestation_delta=eo_context.deforestation_delta,
             mode=eo_context.mode,
@@ -222,6 +223,7 @@ class PromptBuilder:
         summary: str,
         water_coverage_percent: Optional[float] = None,
         vegetation_index_score: Optional[float] = None,
+        vegetation_index_type: Optional[str] = None,
         urban_density_percent: Optional[float] = None,
         deforestation_delta: Optional[float] = None,
         mode: Optional[str] = None,
@@ -231,6 +233,7 @@ class PromptBuilder:
         """
         water_val = f"{water_coverage_percent:.2f}%" if water_coverage_percent is not None else "Not applicable"
         veg_val = f"{vegetation_index_score:.2f} / 100" if vegetation_index_score is not None else "Not applicable"
+        veg_type_val = vegetation_index_type if vegetation_index_type is not None else "RGB proxy index"
         urban_val = f"{urban_density_percent:.2f}%" if urban_density_percent is not None else "Not applicable"
         deforest_val = f"{deforestation_delta:.2f}%" if deforestation_delta is not None else "Not applicable"
 
@@ -241,6 +244,7 @@ class PromptBuilder:
             summary=summary,
             water_coverage_percent=water_val,
             vegetation_index_score=veg_val,
+            vegetation_index_type=veg_type_val,
             urban_density_percent=urban_val,
             deforestation_delta=deforest_val,
         )

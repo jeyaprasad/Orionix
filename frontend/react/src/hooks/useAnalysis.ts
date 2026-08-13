@@ -94,9 +94,20 @@ export function useAnalysis() {
     setError(null);
     if (!f) return;
 
-    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
-    if (!validTypes.includes(f.type)) {
-      setError(`Invalid file type. Please upload a PNG or JPG image.`);
+    const isTiff = f.name.toLowerCase().endsWith(".tif") || f.name.toLowerCase().endsWith(".tiff");
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/tiff", "image/x-tiff", "image/tif", "image/geotiff", ""];
+    if (!validTypes.includes(f.type) && !isTiff) {
+      setError(`Invalid file type. Please upload a PNG, JPG, or GeoTIFF image.`);
+      return;
+    }
+
+    if (isTiff) {
+      if (f.size > 20 * 1024 * 1024) {
+        setError(`File is too large. Max size for GeoTIFF is 20MB.`);
+        return;
+      }
+      setFile(f);
+      setPreviewUrl(URL.createObjectURL(f));
       return;
     }
 
@@ -130,9 +141,20 @@ export function useAnalysis() {
       return;
     }
 
-    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
-    if (!validTypes.includes(f.type)) {
-      setError(`Invalid file type. Please upload a PNG or JPG image.`);
+    const isTiff = f.name.toLowerCase().endsWith(".tif") || f.name.toLowerCase().endsWith(".tiff");
+    const validTypes = ["image/png", "image/jpeg", "image/jpg", "image/tiff", "image/x-tiff", "image/tif", "image/geotiff", ""];
+    if (!validTypes.includes(f.type) && !isTiff) {
+      setError(`Invalid file type. Please upload a PNG, JPG, or GeoTIFF image.`);
+      return;
+    }
+
+    if (isTiff) {
+      if (f.size > 20 * 1024 * 1024) {
+        setError(`File is too large. Max size for GeoTIFF is 20MB.`);
+        return;
+      }
+      setSecondFile(f);
+      setSecondPreviewUrl(URL.createObjectURL(f));
       return;
     }
 

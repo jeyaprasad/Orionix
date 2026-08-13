@@ -62,6 +62,7 @@ Confidence Band      : {confidence}
 Scene Summary        : {summary}
 Water Coverage       : {water_coverage_percent}
 Vegetation Index     : {vegetation_index_score}
+Vegetation Index Type: {vegetation_index_type}
 Urban Density        : {urban_density_percent}
 Deforestation Delta  : {deforestation_delta}
 ==================

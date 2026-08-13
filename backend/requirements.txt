@@ -9,3 +9,5 @@ torchvision
 open_clip_torch
 pillow
 python-dotenv
+rasterio
+sqlalchemy

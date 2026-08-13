@@ -9,6 +9,11 @@ from backend.api.interpreter import router as interpreter_router
 from backend.api.analyze import router as analyze_router
 from backend.api.insights import router as insights_router
 from backend.api.report import router as report_router
+from backend.api.history import router as history_router
+from backend.db.database import engine, Base
+
+# Initialize SQLite database tables
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Orionix API",
@@ -30,6 +35,7 @@ app.include_router(interpreter_router)
 app.include_router(analyze_router)
 app.include_router(insights_router)
 app.include_router(report_router)
+app.include_router(history_router)
 
 @app.on_event("startup")
 async def startup_event():
