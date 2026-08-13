@@ -46,6 +46,7 @@ async def analyze_image(
     latitude: Optional[float] = Form(None),
     longitude: Optional[float] = Form(None),
     bbox: Optional[str] = Form(None),
+    deforestation_delta: Optional[float] = Form(None),
 ) -> AnalysisResponse:
     """
     POST /api/analyze — production EO analysis endpoint.
@@ -113,6 +114,7 @@ async def analyze_image(
             latitude=latitude,
             longitude=longitude,
             bbox=bbox_list,
+            deforestation_delta=deforestation_delta,
         )
 
     except ValueError as e:

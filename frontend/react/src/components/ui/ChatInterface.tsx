@@ -13,10 +13,15 @@ interface ChatInterfaceProps {
   result: AnalysisResult | null;
   file: File | null;
   previewUrl: string | null;
+  secondFile: File | null;
+  secondPreviewUrl: string | null;
+  mode: "auto" | "flood" | "deforestation" | "urban" | "agriculture";
+  setMode: (val: "auto" | "flood" | "deforestation" | "urban" | "agriculture") => void;
   chatInput: string;
   setChatInput: (val: string) => void;
   handleSubmit: () => void;
   handleFile: (f: File | null) => void;
+  handleSecondFile: (f: File | null) => void;
   isStreaming: boolean;
   abortRequest: () => void;
   showHistory: boolean;
@@ -36,10 +41,15 @@ export const ChatInterface = memo(({
   result,
   file,
   previewUrl,
+  secondFile,
+  secondPreviewUrl,
+  mode,
+  setMode,
   chatInput,
   setChatInput,
   handleSubmit,
   handleFile,
+  handleSecondFile,
   isStreaming,
   abortRequest,
   showHistory,
@@ -152,15 +162,133 @@ export const ChatInterface = memo(({
 
       {!showHistory && (
         <div className="cb-input-area">
-          {file && (
-            <div className="cb-attachment-preview">
-              <img src={previewUrl!} alt="Preview" />
-              <div className="cb-attachment-info">
-                <span className="cb-attachment-name">{file.name}</span>
-                <span className="cb-attachment-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+          {/* Analysis Mode Selector Tabs */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', justifyContent: 'center', width: '100%', flexWrap: 'wrap' }}>
+            {[
+              { id: "auto", label: "Auto-Detect", icon: "🌐" },
+              { id: "flood", label: "Flood Monitoring", icon: "💧" },
+              { id: "deforestation", label: "Deforestation Compare", icon: "🪵" },
+              { id: "urban", label: "Urban Density", icon: "🏙️" },
+              { id: "agriculture", label: "Vegetation Health", icon: "🌿" },
+            ].map((t) => (
+              <button
+                key={t.id}
+                onClick={() => setMode(t.id as any)}
+                style={{
+                  padding: '6px 12px',
+                  borderRadius: '16px',
+                  background: mode === t.id ? '#1e293b' : 'transparent',
+                  border: mode === t.id ? '1px solid #475569' : '1px solid transparent',
+                  color: mode === t.id ? '#f8fafc' : '#94a3b8',
+                  fontSize: '12px',
+                  fontWeight: '500',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                <span>{t.icon}</span> {t.label}
+              </button>
+            ))}
+          </div>
+
+          {mode === "deforestation" ? (
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '12px', width: '100%', flexWrap: 'wrap' }}>
+              {/* Baseline Image Upload Block */}
+              <div style={{ flex: 1, minWidth: '150px' }}>
+                <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '4px', fontFamily: 'monospace' }}>BASELINE IMAGE (BEFORE)</span>
+                {file ? (
+                  <div className="cb-attachment-preview">
+                    <img src={previewUrl!} alt="Baseline Preview" />
+                    <div className="cb-attachment-info">
+                      <span className="cb-attachment-name">{file.name}</span>
+                    </div>
+                    <button className="cb-attachment-remove" onClick={() => handleFile(null)}>×</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => document.getElementById("file-upload-baseline")?.click()}
+                    style={{
+                      width: '100%',
+                      height: '50px',
+                      borderRadius: '8px',
+                      border: '1px dashed #334155',
+                      background: 'transparent',
+                      color: '#94a3b8',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <span>➕ Upload Baseline</span>
+                  </button>
+                )}
+                <input
+                  id="file-upload-baseline"
+                  type="file"
+                  accept="image/png, image/jpeg"
+                  style={{ display: "none" }}
+                  onChange={(e) => handleFile(e.target.files?.[0] || null)}
+                />
               </div>
-              <button className="cb-attachment-remove" onClick={() => handleFile(null)}>×</button>
+
+              {/* Current Image Upload Block */}
+              <div style={{ flex: 1, minWidth: '150px' }}>
+                <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '4px', fontFamily: 'monospace' }}>CURRENT IMAGE (AFTER)</span>
+                {secondFile ? (
+                  <div className="cb-attachment-preview">
+                    <img src={secondPreviewUrl!} alt="Current Preview" />
+                    <div className="cb-attachment-info">
+                      <span className="cb-attachment-name">{secondFile.name}</span>
+                    </div>
+                    <button className="cb-attachment-remove" onClick={() => handleSecondFile(null)}>×</button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => document.getElementById("file-upload-current")?.click()}
+                    style={{
+                      width: '100%',
+                      height: '50px',
+                      borderRadius: '8px',
+                      border: '1px dashed #334155',
+                      background: 'transparent',
+                      color: '#94a3b8',
+                      fontSize: '11px',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px',
+                    }}
+                  >
+                    <span>➕ Upload Current</span>
+                  </button>
+                )}
+                <input
+                  id="file-upload-current"
+                  type="file"
+                  accept="image/png, image/jpeg"
+                  style={{ display: "none" }}
+                  onChange={(e) => handleSecondFile(e.target.files?.[0] || null)}
+                />
+              </div>
             </div>
+          ) : (
+            file && (
+              <div className="cb-attachment-preview" style={{ marginBottom: '12px' }}>
+                <img src={previewUrl!} alt="Preview" />
+                <div className="cb-attachment-info">
+                  <span className="cb-attachment-name">{file.name}</span>
+                  <span className="cb-attachment-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                </div>
+                <button className="cb-attachment-remove" onClick={() => handleFile(null)}>×</button>
+              </div>
+            )
           )}
           {result && !file && (
             <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
@@ -203,11 +331,17 @@ export const ChatInterface = memo(({
             />
             <textarea
               id="chat-input-textarea"
-              placeholder={file || result ? "Ask a follow-up question..." : "Describe what you want to analyze..."}
+              placeholder={
+                mode === "deforestation"
+                  ? "Describe baseline comparison context..."
+                  : file || result
+                  ? "Ask a follow-up question..."
+                  : "Describe what you want to analyze..."
+              }
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              rows={Math.min(chatInput.split("\\n").length, 5) || 1}
+              rows={Math.min(chatInput.split("\n").length, 5) || 1}
             />
             {isStreaming || status === "running" ? (
               <button className="cb-submit-btn cb-stop-btn" onClick={abortRequest} title="Stop generation">
@@ -217,7 +351,11 @@ export const ChatInterface = memo(({
               <button
                 className="cb-submit-btn"
                 onClick={handleSubmit}
-                disabled={(!chatInput.trim() && !file) || status === "running"}
+                disabled={
+                  (!chatInput.trim()) ||
+                  (mode === "deforestation" ? (!file || !secondFile) : (!file)) ||
+                  status === "running"
+                }
               >
                 ↑
               </button>

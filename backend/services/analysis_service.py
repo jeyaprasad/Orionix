@@ -332,6 +332,7 @@ class AnalysisService:
             professional_report=professional_report,
             warning=gpt_warning,
             vegetation_health_score=eo_result.vegetation_health_score,
+            deforestation_delta=deforestation_delta,
             vegetation_health_disclaimer=eo_result.vegetation_health_disclaimer,
             water_coverage_percent=raw_outputs.get("water_coverage_percent"),
             water_mask_base64=raw_outputs.get("water_mask_base64"),

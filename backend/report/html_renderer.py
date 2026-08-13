@@ -72,18 +72,9 @@ class HTMLRenderer:
         risk_level = ed.get('risk_level', risk_level)
         scene_type = ed.get("scene_type", "Natural")
 
-        # Clean bullet lists for findings & recommendations (single-line bullet each, no split)
-        findings_html = '<ul class="bullet-list">'
-        for f in findings:
-            clean_f = f.strip()
-            findings_html += f'<li class="bullet-item">{clean_f}</li>'
-        findings_html += '</ul>'
-
-        recs_html = '<ul class="bullet-list">'
-        for r in recs:
-            clean_r = r.strip()
-            recs_html += f'<li class="bullet-item">{clean_r}</li>'
-        recs_html += '</ul>'
+        # Convert lists to flowing prose paragraphs
+        findings_prose = " ".join([f.strip() for f in findings])
+        recs_prose = " ".join([r.strip() for r in recs])
 
         # Badges helper
         def badge_color(val):
@@ -103,6 +94,18 @@ class HTMLRenderer:
             if 'detected' in val_lower and 'not' not in val_lower: return 'DETECTED'
             return 'NONE'
 
+        def get_bar_metrics(val):
+            val_lower = str(val).lower()
+            if 'high' in val_lower:
+                return 90, '#ff3366'
+            if 'medium' in val_lower:
+                return 60, '#ff9d00'
+            if 'low' in val_lower:
+                return 30, '#39d353'
+            if 'detected' in val_lower and 'not' not in val_lower:
+                return 80, '#0088ff'
+            return 5, '#475466'
+
         veg_status = status_display(ea.get("vegetation", "Unknown"))
         urban_density = status_display(ea.get("urban_density", "Unknown"))
         water_presence = status_display(ea.get("water_presence", "Unknown"))
@@ -114,6 +117,28 @@ class HTMLRenderer:
         water_color = badge_color(ea.get("water_presence", "Unknown"))
         industrial_color = badge_color(ea.get("industrial_activity", "Unknown"))
         environmental_color = badge_color(ea.get("environmental_risk", "Unknown"))
+
+        veg_pct, veg_bar_color = get_bar_metrics(ea.get("vegetation", "Unknown"))
+        urban_pct, urban_bar_color = get_bar_metrics(ea.get("urban_density", "Unknown"))
+        water_pct, water_bar_color = get_bar_metrics(ea.get("water_presence", "Unknown"))
+        industrial_pct, industrial_bar_color = get_bar_metrics(ea.get("industrial_activity", "Unknown"))
+        environmental_pct, environmental_bar_color = get_bar_metrics(ea.get("environmental_risk", "Unknown"))
+
+        # Construct lead paragraph narrative
+        summary_sentence = analysis_dict.get('summary', '') or ''
+        if summary_sentence and not summary_sentence.endswith('.'):
+            summary_sentence += '.'
+        
+        lead_text = f"Geospatial telemetry confirms a {dominant_cover.lower()} layout. {summary_sentence} The status is currently flagged as {overall_status.lower()} with a {risk_level.lower()} risk rating."
+
+        # Construct closing summary block takeaway
+        top_rec = recs[0] if recs else "maintain standard monitoring frequency"
+        top_rec_clean = top_rec.strip().rstrip('.')
+        summary_block_text = (
+            f"<strong>In summary, the telemetry classifies this location as a {dominant_cover.lower()} zone with a {risk_level.lower()} risk classification.</strong> "
+            f"To optimize environmental stability and mitigate potential hazards, analysts should {top_rec_clean.lower()}. "
+            "Continuous monitoring of indicators remains critical for early detection of rapid landscape transformations."
+        )
 
         # Construct Location row if coordinates/bbox are present
         location_html = ""
@@ -146,6 +171,15 @@ class HTMLRenderer:
                 f'</div>{advisory_text}'
             )
 
+        # Determine single accent color matching risk level
+        risk_lower = str(risk_level).lower()
+        if 'severe' in risk_lower or 'high' in risk_lower:
+            risk_accent_color = '#ff3366' # red
+        elif 'mod' in risk_lower or 'medium' in risk_lower or 'amber' in risk_lower:
+            risk_accent_color = '#ff9d00' # amber
+        else:
+            risk_accent_color = '#39d353' # green
+
         html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -157,7 +191,7 @@ class HTMLRenderer:
             background-color: #03030a;
             color: #f0edff;
             margin: 0;
-            padding: 20px;
+            padding: 10px 15px;
             font-size: 12px;
         }}
         
@@ -167,33 +201,33 @@ class HTMLRenderer:
 
         .logo-text {{
             font-family: Courier, monospace;
-            font-size: 16px;
+            font-size: 14px;
             font-weight: bold;
             color: #ffffff;
-            margin-bottom: 8px;
+            margin-bottom: 4px;
         }}
 
         h1 {{
-            font-size: 24px;
+            font-size: 20px;
             font-weight: bold;
             color: #ffffff;
-            margin: 5px 0 0 0;
+            margin: 2px 0 0 0;
         }}
 
         h2 {{
-            font-size: 12px;
+            font-size: 11px;
             color: #00f0ff;
             font-family: Courier, monospace;
             font-weight: normal;
             text-transform: uppercase;
-            margin: 3px 0 0 0;
+            margin: 2px 0 0 0;
         }}
 
         .gen-date {{
             color: #a09cb4;
-            font-size: 10px;
+            font-size: 9px;
             font-family: Courier, monospace;
-            margin: 8px 0 0 0;
+            margin: 4px 0 0 0;
         }}
         
         .satellite-preview {{
@@ -203,63 +237,102 @@ class HTMLRenderer:
         }}
         
         .section-title {{
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
-            margin-top: 20px;
-            margin-bottom: 12px;
+            margin-top: 14px;
+            margin-bottom: 8px;
             text-transform: uppercase;
             color: #f0edff;
             font-family: Courier, monospace;
             border-bottom: 1px solid #22223a;
-            padding-bottom: 4px;
+            padding-bottom: 3px;
         }}
 
-        /* KPI Cards styled without variables */
-        .kpi-card {{
-            background-color: #11112e;
-            border-bottom: 1px solid #22223a;
-            border-left: 1px solid #22223a;
-            border-right: 1px solid #22223a;
-            padding: 12px;
-            text-align: center;
+        /* Lead Block Styling */
+        .lead-block {{
+            border-left: 4px solid {risk_accent_color};
+            background-color: #0d0d21;
+            padding: 10px 14px;
+            margin-bottom: 12px;
+            border-radius: 0 4px 4px 0;
         }}
-        
-        .kpi-label {{
-            font-size: 9px;
+        .lead-text-p {{
+            margin: 0;
+            font-size: 11px;
+            line-height: 1.5;
+            color: #d2cffd;
+            font-style: italic;
+        }}
+
+        /* Redesigned Three-tier Layout */
+        .headline-table {{
+            width: 100%;
+            border: 1px solid #22223a;
+            background-color: #11112e;
+            margin-bottom: 8px;
+            border-collapse: collapse;
+        }}
+        .headline-label {{
+            font-size: 8px;
             color: #a09cb4;
             text-transform: uppercase;
             font-family: Courier, monospace;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }}
-        
-        .kpi-val {{
-            font-size: 12px;
+        .headline-val {{
+            font-size: 15px;
             font-weight: bold;
             color: #ffffff;
-            text-transform: capitalize;
         }}
         
-        /* Environmental Indicator Cards */
-        .env-card {{
+        .detail-table {{
+            width: 100%;
+            border: 1px solid #22223a;
+            background-color: #0c0c1e;
+            margin-bottom: 8px;
+            border-collapse: collapse;
+        }}
+        .detail-label {{
+            font-size: 8px;
+            color: #a09cb4;
+            font-family: Courier, monospace;
+            text-transform: uppercase;
+        }}
+        .detail-val {{
+            font-size: 10px;
+            font-weight: bold;
+            color: #ffffff;
+            margin-left: 4px;
+        }}
+
+        .indicator-table {{
+            width: 100%;
+            border: 1px solid #22223a;
             background-color: #11112e;
-            border-bottom: 1px solid #22223a;
-            border-left: 1px solid #22223a;
-            border-right: 1px solid #22223a;
-            padding: 12px;
-            text-align: center;
+            border-collapse: collapse;
+            margin-bottom: 12px;
         }}
-        
-        .env-title {{
+        .indicator-row {{
+            border-bottom: 1px solid #22223a;
+        }}
+        .indicator-row:last-child {{
+            border-bottom: none;
+        }}
+        .indicator-name {{
+            padding: 6px 12px;
+            font-family: Courier, monospace;
             font-size: 9px;
             color: #a09cb4;
             text-transform: uppercase;
-            font-family: Courier, monospace;
-            margin-bottom: 8px;
+        }}
+        .indicator-value {{
+            padding: 6px 12px;
+            text-align: right;
         }}
         
         .badge {{
-            padding: 4px 8px;
-            border-radius: 10px;
+            padding: 2px 6px;
+            border-radius: 6px;
             font-size: 8px;
             font-weight: bold;
             text-transform: uppercase;
@@ -272,24 +345,11 @@ class HTMLRenderer:
         .bg-green {{ background-color: #183624; color: #a7f3d0; border: 1px solid #275c3d; }}
         .bg-blue {{ background-color: #162a4a; color: #bfdbfe; border: 1px solid #2a4c80; }}
         .bg-gray {{ background-color: #2d3540; color: #cbd5e1; border: 1px solid #475466; }}
-
-        /* Clean Bullet Styling */
-        .bullet-list {{
-            margin: 0;
-            padding-left: 15px;
-        }}
-        
-        .bullet-item {{
-            margin-bottom: 6px;
-            color: #a09cb4;
-            line-height: 1.4;
-        }}
         
         @media print {{
             body {{ background-color: #ffffff; color: #000000; }}
-            .kpi-card, .env-card {{ background-color: #f8f9fa; border: 1px solid #dee2e6; }}
+            .headline-table, .detail-table, .indicator-table {{ background-color: #f8f9fa; border: 1px solid #dee2e6; }}
             h1, .logo-text {{ color: #000000; }}
-            .bullet-item {{ color: #333333; }}
         }}
     </style>
 </head>
@@ -297,7 +357,7 @@ class HTMLRenderer:
     <div class="container">
         
         <!-- HEADER LAYOUT TABLE (Replaces Grid/Flexbox for xhtml2pdf) -->
-        <table style="width: 100%; border-bottom: 1px solid #22223a; padding-bottom: 15px; margin-bottom: 20px;">
+        <table style="width: 100%; border-bottom: 1px solid #22223a; padding-bottom: 10px; margin-bottom: 15px;">
             <tr>
                 <td style="width: 70%; vertical-align: middle;">
                     <div class="logo-text"><span style="color: #00f0ff;">●</span> Orionix</div>
@@ -312,101 +372,113 @@ class HTMLRenderer:
             </tr>
         </table>
 
-        <!-- SCENE OVERVIEW TABLE -->
-        <div class="section-title">Scene Overview</div>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
+        <!-- LEAD PARAGRAPH BLOCK -->
+        <div class="lead-block">
+            <p class="lead-text-p">{lead_text}</p>
+        </div>
+
+        <!-- TOP TIER: HEADLINE SUMMARY -->
+        <table class="headline-table">
             <tr>
-                <td style="width: 33.3%; padding: 4px;">
-                    <div class="kpi-card" style="border-top: 2px solid #0088ff;">
-                        <div class="kpi-label">Primary Cover</div>
-                        <div class="kpi-val">{dominant_cover}</div>
-                    </div>
+                <td style="padding: 10px 12px; width: 50%; border-right: 1px solid #22223a; vertical-align: middle;">
+                    <div class="headline-label">Overall Status</div>
+                    <div class="headline-val">{overall_status}</div>
                 </td>
-                <td style="width: 33.3%; padding: 4px;">
-                    <div class="kpi-card" style="border-top: 2px solid #39d353;">
-                        <div class="kpi-label">Secondary Cover</div>
-                        <div class="kpi-val">{secondary_cover}</div>
-                    </div>
-                </td>
-                <td style="width: 33.3%; padding: 4px;">
-                    <div class="kpi-card" style="border-top: 2px solid #00f0ff;">
-                        <div class="kpi-label">Confidence</div>
-                        <div class="kpi-val">{confidence}</div>
-                    </div>
-                </td>
-            </tr>
-            <tr>
-                <td style="width: 33.3%; padding: 4px;">
-                    <div class="kpi-card" style="border-top: 2px solid #ae52ff;">
-                        <div class="kpi-label">Overall Status</div>
-                        <div class="kpi-val">{overall_status}</div>
-                    </div>
-                </td>
-                <td style="width: 33.3%; padding: 4px;">
-                    <div class="kpi-card" style="border-top: 2px solid #ff3366;">
-                        <div class="kpi-label">Risk Level</div>
-                        <div class="kpi-val">{risk_level}</div>
-                    </div>
-                </td>
-                <td style="width: 33.3%; padding: 4px;">
-                    <div class="kpi-card" style="border-top: 2px solid #ff9d00;">
-                        <div class="kpi-label">Scene Type</div>
-                        <div class="kpi-val">{scene_type}</div>
-                    </div>
+                <td style="padding: 10px 12px; width: 50%; text-align: right; vertical-align: middle;">
+                    <div class="headline-label">Risk Level</div>
+                    <div class="headline-val" style="color: {risk_accent_color};">{risk_level}</div>
                 </td>
             </tr>
         </table>
 
-        <!-- ENVIRONMENTAL INDICATORS TABLE -->
+        <!-- MIDDLE TIER: SUPPORTING METRICS -->
+        <table class="detail-table">
+            <tr>
+                <td style="padding: 6px 12px; width: 33.3%; border-right: 1px solid #22223a; vertical-align: middle;">
+                    <span class="detail-label">Primary:</span>
+                    <span class="detail-val">{dominant_cover}</span>
+                </td>
+                <td style="padding: 6px 12px; width: 33.3%; border-right: 1px solid #22223a; text-align: center; vertical-align: middle;">
+                    <span class="detail-label">Secondary:</span>
+                    <span class="detail-val">{secondary_cover}</span>
+                </td>
+                <td style="padding: 6px 12px; width: 33.3%; text-align: right; vertical-align: middle;">
+                    <span class="detail-label">Confidence:</span>
+                    <span class="detail-val">{confidence}</span>
+                </td>
+            </tr>
+        </table>
+
+        <!-- BOTTOM TIER: ENVIRONMENTAL INDICATORS TABLE WITH BARS -->
         <div class="section-title">Environmental Indicators</div>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px;">
-            <tr>
-                <td style="width: 20%; padding: 4px;">
-                    <div class="env-card" style="border-top: 2px solid #39d353;">
-                        <div class="env-title">Vegetation</div>
-                        <span class="badge {veg_color}">{veg_status}</span>
+        <table class="indicator-table">
+            <tr class="indicator-row">
+                <td class="indicator-name" style="width: 30%;">Vegetation Health</td>
+                <td style="width: 50%; vertical-align: middle; padding: 0 10px;">
+                    <div style="background-color: #1a1a3a; height: 6px; border-radius: 3px; width: 100%; overflow: hidden;">
+                        <div style="background-color: {veg_bar_color}; width: {veg_pct}%; height: 100%; border-radius: 3px;"></div>
                     </div>
                 </td>
-                <td style="width: 20%; padding: 4px;">
-                    <div class="env-card" style="border-top: 2px solid #ae52ff;">
-                        <div class="env-title">Urban Density</div>
-                        <span class="badge {urban_color}">{urban_density}</span>
+                <td class="indicator-value" style="width: 20%;"><span class="badge {veg_color}">{veg_status}</span></td>
+            </tr>
+            <tr class="indicator-row">
+                <td class="indicator-name" style="width: 30%;">Urban / Built-up Density</td>
+                <td style="width: 50%; vertical-align: middle; padding: 0 10px;">
+                    <div style="background-color: #1a1a3a; height: 6px; border-radius: 3px; width: 100%; overflow: hidden;">
+                        <div style="background-color: {urban_bar_color}; width: {urban_pct}%; height: 100%; border-radius: 3px;"></div>
                     </div>
                 </td>
-                <td style="width: 20%; padding: 4px;">
-                    <div class="env-card" style="border-top: 2px solid #0088ff;">
-                        <div class="env-title">Water Presence</div>
-                        <span class="badge {water_color}">{water_presence}</span>
+                <td class="indicator-value" style="width: 20%;"><span class="badge {urban_color}">{urban_density}</span></td>
+            </tr>
+            <tr class="indicator-row">
+                <td class="indicator-name" style="width: 30%;">Water Presence</td>
+                <td style="width: 50%; vertical-align: middle; padding: 0 10px;">
+                    <div style="background-color: #1a1a3a; height: 6px; border-radius: 3px; width: 100%; overflow: hidden;">
+                        <div style="background-color: {water_bar_color}; width: {water_pct}%; height: 100%; border-radius: 3px;"></div>
                     </div>
                 </td>
-                <td style="width: 20%; padding: 4px;">
-                    <div class="env-card" style="border-top: 2px solid #ff9d00;">
-                        <div class="env-title">Industrial Activity</div>
-                        <span class="badge {industrial_color}">{industrial_activity}</span>
+                <td class="indicator-value" style="width: 20%;"><span class="badge {water_color}">{water_presence}</span></td>
+            </tr>
+            <tr class="indicator-row">
+                <td class="indicator-name" style="width: 30%;">Industrial Activity</td>
+                <td style="width: 50%; vertical-align: middle; padding: 0 10px;">
+                    <div style="background-color: #1a1a3a; height: 6px; border-radius: 3px; width: 100%; overflow: hidden;">
+                        <div style="background-color: {industrial_bar_color}; width: {industrial_pct}%; height: 100%; border-radius: 3px;"></div>
                     </div>
                 </td>
-                <td style="width: 20%; padding: 4px;">
-                    <div class="env-card" style="border-top: 2px solid #ff3366;">
-                        <div class="env-title">Environmental Risk</div>
-                        <span class="badge {environmental_color}">{environmental_risk}</span>
+                <td class="indicator-value" style="width: 20%;"><span class="badge {industrial_color}">{industrial_activity}</span></td>
+            </tr>
+            <tr class="indicator-row">
+                <td class="indicator-name" style="width: 30%;">Environmental Risk</td>
+                <td style="width: 50%; vertical-align: middle; padding: 0 10px;">
+                    <div style="background-color: #1a1a3a; height: 6px; border-radius: 3px; width: 100%; overflow: hidden;">
+                        <div style="background-color: {environmental_bar_color}; width: {environmental_pct}%; height: 100%; border-radius: 3px;"></div>
                     </div>
                 </td>
+                <td class="indicator-value" style="width: 20%;"><span class="badge {environmental_color}">{environmental_risk}</span></td>
             </tr>
         </table>
 
-        <!-- KEY FINDINGS & AI RECOMMENDATIONS TABLE -->
-        <table style="width: 100%; border-collapse: collapse;">
+        <!-- KEY FINDINGS & AI RECOMMENDATIONS TABLE (Prose paragraphs) -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
             <tr>
                 <td style="width: 50%; vertical-align: top; padding-right: 12px;">
                     <div class="section-title">Key Findings</div>
-                    {findings_html}
+                    <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #a09cb4;">{findings_prose}</p>
                 </td>
                 <td style="width: 50%; vertical-align: top; padding-left: 12px;">
                     <div class="section-title">AI Recommendations</div>
-                    {recs_html}
+                    <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #a09cb4;">{recs_prose}</p>
                 </td>
             </tr>
         </table>
+
+        <!-- CLOSING SUMMARY BLOCK -->
+        <div style="border-top: 1px solid #22223a; padding-top: 10px; margin-top: 15px;">
+            <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #f0edff;">
+                {summary_block_text}
+            </p>
+        </div>
 
     </div>
 </body>

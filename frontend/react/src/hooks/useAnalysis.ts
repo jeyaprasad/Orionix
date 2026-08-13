@@ -84,6 +84,10 @@ export function useAnalysis() {
   const [coordinates, setCoordinates] = useState<{ lat: number; lng: number } | null>(null);
   const [bbox, setBbox] = useState<{ minLat: number; minLng: number; maxLat: number; maxLng: number } | null>(null);
 
+  const [mode, setMode] = useState<"auto" | "flood" | "deforestation" | "urban" | "agriculture">("auto");
+  const [secondFile, setSecondFile] = useState<File | null>(null);
+  const [secondPreviewUrl, setSecondPreviewUrl] = useState<string | null>(null);
+
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   const handleFile = useCallback(async (f: File | null) => {
@@ -118,6 +122,40 @@ export function useAnalysis() {
     }
   }, []);
 
+  const handleSecondFile = useCallback(async (f: File | null) => {
+    setError(null);
+    if (!f) {
+      setSecondFile(null);
+      setSecondPreviewUrl(null);
+      return;
+    }
+
+    const validTypes = ["image/png", "image/jpeg", "image/jpg"];
+    if (!validTypes.includes(f.type)) {
+      setError(`Invalid file type. Please upload a PNG or JPG image.`);
+      return;
+    }
+
+    try {
+      const options = {
+        maxSizeMB: 2,
+        maxWidthOrHeight: 1920,
+        useWebWorker: true
+      };
+      const compressedFile = await imageCompression(f, options);
+      setSecondFile(compressedFile);
+      setSecondPreviewUrl(URL.createObjectURL(compressedFile));
+    } catch (err) {
+      console.error("Image compression error", err);
+      if (f.size > 10 * 1024 * 1024) {
+        setError(`File is too large. Max size is 10MB.`);
+        return;
+      }
+      setSecondFile(f);
+      setSecondPreviewUrl(URL.createObjectURL(f));
+    }
+  }, []);
+
   const handleReset = useCallback(() => {
     if (messages.length > 0 || result || file) {
       setSessions((prev) => [{
@@ -132,6 +170,9 @@ export function useAnalysis() {
     setMessages([]);
     setFile(null);
     setPreviewUrl(null);
+    setSecondFile(null);
+    setSecondPreviewUrl(null);
+    setMode("auto");
     setCoordinates(null);
     setBbox(null);
     setStatus("idle");
@@ -154,7 +195,15 @@ export function useAnalysis() {
   }, []);
 
   const runAnalysis = useCallback(async (prompt: string) => {
-    if (!file || !prompt.trim()) return;
+    if (mode === "deforestation") {
+      if (!file || !secondFile) {
+        setError("Both Baseline and Current images are required for Deforestation Compare mode.");
+        return;
+      }
+    } else {
+      if (!file) return;
+    }
+    if (!prompt.trim()) return;
 
     setMessages((prev) => [...prev, { role: "user", text: prompt }]);
     setStatus("running");
@@ -174,8 +223,32 @@ export function useAnalysis() {
     });
 
     try {
+      const controller = new AbortController();
+      setAbortController(controller);
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+      let deforestDelta: number | null = null;
+      if (mode === "deforestation" && file && secondFile) {
+        const compFormData = new FormData();
+        compFormData.append("baseline", file, file.name || "baseline.jpeg");
+        compFormData.append("current", secondFile, secondFile.name || "current.jpeg");
+
+        const compRes = await fetch(`${API_BASE}/api/analyze/compare`, {
+          method: "POST",
+          body: compFormData,
+          signal: controller.signal
+        });
+        if (!compRes.ok) {
+          throw new Error("Deforestation baseline/current analysis comparison failed.");
+        }
+        const compData = await compRes.json();
+        deforestDelta = compData.deforestation_delta;
+      }
+
       const formData = new FormData();
-      formData.append("image", file, file.name || "image.jpeg");
+      const targetImage = mode === "deforestation" && secondFile ? secondFile : file;
+      formData.append("image", targetImage!, targetImage!.name || "image.jpeg");
+
       if (coordinates) {
         formData.append("latitude", coordinates.lat.toString());
         formData.append("longitude", coordinates.lng.toString());
@@ -187,10 +260,9 @@ export function useAnalysis() {
         formData.append("max_longitude", bbox.maxLng.toString());
         formData.append("bbox", JSON.stringify([bbox.minLat, bbox.minLng, bbox.maxLat, bbox.maxLng]));
       }
-
-      const controller = new AbortController();
-      setAbortController(controller);
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+      if (deforestDelta !== null) {
+        formData.append("deforestation_delta", deforestDelta.toString());
+      }
 
       const fetchAnalysis = fetch(`${API_BASE}/api/analyze`, {
         method: "POST",
@@ -298,6 +370,9 @@ export function useAnalysis() {
   return {
     file,
     previewUrl,
+    secondFile,
+    secondPreviewUrl,
+    mode,
     status,
     stageIndex,
     result,
@@ -310,7 +385,9 @@ export function useAnalysis() {
     setCoordinates,
     bbox,
     setBbox,
+    setMode,
     handleFile,
+    handleSecondFile,
     handleReset,
     restoreSession,
     runAnalysis,

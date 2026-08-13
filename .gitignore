@@ -10,6 +10,8 @@ node_modules/
 dist/
 build/
 .vite/
+.output/
+
 
 # Orionix Models and Data
 models/

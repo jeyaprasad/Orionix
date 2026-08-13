@@ -92,6 +92,10 @@ class AnalysisResponse(BaseModel):
         None,
         description="Lightweight 0-100 vegetation health score proxy."
     )
+    deforestation_delta: Optional[float] = Field(
+        None,
+        description="Percentage-point drop in vegetation (baseline - current)."
+    )
     vegetation_health_disclaimer: Optional[str] = Field(
         None,
         description="Disclaimer explaining that this is an RGB-based proxy."

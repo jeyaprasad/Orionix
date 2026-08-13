@@ -12,6 +12,9 @@ function OrionixDemo() {
   const {
     file,
     previewUrl,
+    secondFile,
+    secondPreviewUrl,
+    mode,
     status,
     stageIndex,
     result,
@@ -20,6 +23,7 @@ function OrionixDemo() {
     sessions,
     isStreaming,
     handleFile,
+    handleSecondFile,
     handleReset,
     restoreSession,
     runAnalysis,
@@ -29,7 +33,8 @@ function OrionixDemo() {
     coordinates,
     setCoordinates,
     bbox,
-    setBbox
+    setBbox,
+    setMode
   } = useAnalysis();
 
   const [chatInput, setChatInput] = useState("");
@@ -37,13 +42,20 @@ function OrionixDemo() {
 
   const handleSubmit = () => {
     const prompt = chatInput.trim();
-    if (!prompt && !file) return;
-    if (file && status !== "running") {
-      runAnalysis(prompt);
-      setChatInput("");
-    } else if (result && status !== "running") {
-      askInsight(prompt);
-      setChatInput("");
+    if (!prompt) return;
+    if (mode === "deforestation") {
+      if (file && secondFile && status !== "running") {
+        runAnalysis(prompt);
+        setChatInput("");
+      }
+    } else {
+      if (file && status !== "running") {
+        runAnalysis(prompt);
+        setChatInput("");
+      } else if (result && status !== "running") {
+        askInsight(prompt);
+        setChatInput("");
+      }
     }
   };
 
@@ -109,10 +121,15 @@ function OrionixDemo() {
                 result={result}
                 file={file}
                 previewUrl={previewUrl}
+                secondFile={secondFile}
+                secondPreviewUrl={secondPreviewUrl}
+                mode={mode}
+                setMode={setMode}
                 chatInput={chatInput}
                 setChatInput={setChatInput}
                 handleSubmit={handleSubmit}
                 handleFile={handleFile}
+                handleSecondFile={handleSecondFile}
                 isStreaming={isStreaming}
                 abortRequest={abortRequest}
                 showHistory={showHistory}
