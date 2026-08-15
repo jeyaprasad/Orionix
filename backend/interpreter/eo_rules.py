@@ -95,12 +95,17 @@ def compute_flood_risk_score(
     water_coverage_percent: float,
     urban_density: str,
     agricultural_presence: str,
+    recent_rainfall: float = 0.0,
+    forecast_rainfall: float = 0.0,
 ) -> dict:
     """
     Computes a flood risk score (0-100) and qualitative risk label.
     
     Weights risk higher when water overlaps urban/residential settlements
     or agricultural areas, and lower in forest or barren zones.
+    
+    Escalates risk one tier if current water coverage is already elevated
+    and recent/forecast rainfall from Open-Meteo is high.
     """
     if water_coverage_percent <= 0:
         return {
@@ -147,8 +152,27 @@ def compute_flood_risk_score(
     else:
         risk_label = "Severe"
 
+    # Escalation check: if recent/forecast rainfall is high AND water coverage is already elevated (>8%)
+    is_rainfall_high = (recent_rainfall > 20.0 or forecast_rainfall > 15.0 or (recent_rainfall + forecast_rainfall) > 30.0)
+    is_water_elevated = (water_coverage_percent > 8.0)
+    
+    escalated = False
+    if is_rainfall_high and is_water_elevated:
+        escalated = True
+        risk_score = min(risk_score + 15.0, 100.0)
+        risk_score = round(risk_score, 2)
+        
+        # Escalate risk label one tier
+        tiers = ["Low", "Moderate", "High", "Severe"]
+        current_idx = tiers.index(risk_label)
+        if current_idx < len(tiers) - 1:
+            risk_label = tiers[current_idx + 1]
+
     # Construct one-line reasoning string
-    if not impact_reasons:
+    if escalated:
+        total_rain = recent_rainfall + forecast_rainfall
+        reasoning = f"Elevated risk: {total_rain:.1f}mm rainfall (past 7d + forecast 3d) combined with existing water coverage of {water_coverage_percent:.1f}%."
+    elif not impact_reasons:
         reasoning = f"Flood risk is {risk_label.lower()} ({risk_score}%) due to low human/crop impact in the water-covered zone."
     else:
         reasons_str = " and ".join(impact_reasons)

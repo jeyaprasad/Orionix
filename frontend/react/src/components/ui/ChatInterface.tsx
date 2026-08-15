@@ -81,6 +81,15 @@ export const ChatInterface = memo(({
 
   return (
     <div className="cb-chat-container">
+      {/* On-screen architecture indicator for judges */}
+      <div className="cb-arch-banner">
+        <span className="cb-arch-step vision">📷 Vision: RemoteCLIP</span>
+        <span className="cb-arch-arrow">➔</span>
+        <span className="cb-arch-step bridge">⚙️ Telemetry Bridge</span>
+        <span className="cb-arch-arrow">➔</span>
+        <span className="cb-arch-step reasoning">🧠 Reasoning: GPT-OSS</span>
+      </div>
+
       {messages.length === 0 && status === "idle" && !showHistory ? (
         <div className="cb-welcome orionix-reveal orionix-in">
           <div className="cb-hero-orb orb1"></div>

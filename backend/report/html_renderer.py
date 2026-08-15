@@ -1,9 +1,19 @@
 import json
 import datetime
+from typing import Any, Dict
 
 class HTMLRenderer:
-    def render(self, analysis: any, claude_json: any = None, image_base64: str = None) -> str:
-        now = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    """
+    Renders professional, table-based geospatial intelligence briefs.
+    This HTML structure is fully compatible with xhtml2pdf for PDF generation:
+      - Uses only hex colors and basic HTML tables for layout (no flexbox/grid/CSS vars).
+      - Renders mini table cells for progress bars to bypass xhtml2pdf div clipping bugs.
+      - Displays dynamic coordinates, weather correlation alerts, temporal deltas,
+        and AI-driven insights in a structured, clean executive brief format.
+    """
+    
+    def render(self, analysis: Any, claude_json: Any = None, image_base64: str = None) -> str:
+        now_utc = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
         
         # Defensive check for call pattern from pdf_generator.py:
         # html_renderer.render(analysis, image_base64)
@@ -12,11 +22,9 @@ class HTMLRenderer:
             claude_json = None
             
         if image_base64 and not image_base64.startswith("data:"):
+            # Assume JPEG default for raw base64 data
             image_base64 = f"data:image/jpeg;base64,{image_base64}"
             
-        # Simplified image tag for xhtml2pdf compatibility
-        img_tag = f'<img src="{image_base64}" class="satellite-preview" alt="Satellite Preview" />' if image_base64 else ''
-        
         # Convert analysis to dictionary if it is a Pydantic model
         if hasattr(analysis, "dict"):
             analysis_dict = analysis.dict()
@@ -25,16 +33,19 @@ class HTMLRenderer:
         else:
             analysis_dict = {}
 
-        # Extract core semantics
+        # 1. Extract core semantics
         dominant_cover = analysis_dict.get('dominant_land_cover', 'N/A')
         secondary_cover = analysis_dict.get('secondary_land_cover') or 'None'
         confidence = analysis_dict.get('confidence', 'N/A')
         risk_level = analysis_dict.get('risk_level') or 'Low'
+        
+        # 2. Derive unique report ID
+        report_id = f"ORX-{datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%d')}-{abs(hash(dominant_cover)) % 10000:04d}"
 
-        # Fallback structures for absolute safety
+        # 3. Fallback structures for safety
         fallback_json = {
             "executive_dashboard": {
-                "overall_status": "Stable",
+                "overall_status": "Monitored",
                 "risk_level": risk_level,
                 "scene_type": "Natural"
             },
@@ -56,7 +67,7 @@ class HTMLRenderer:
             ]
         }
 
-        # Resolve final dashboard parameters
+        # Resolve final report JSON
         if isinstance(claude_json, dict):
             ed = {**fallback_json["executive_dashboard"], **claude_json.get("executive_dashboard", {})}
             ea = {**fallback_json["environmental_assessment"], **claude_json.get("environmental_assessment", {})}
@@ -70,414 +81,447 @@ class HTMLRenderer:
 
         overall_status = ed.get("overall_status", "Stable")
         risk_level = ed.get('risk_level', risk_level)
-        scene_type = ed.get("scene_type", "Natural")
+        
+        # Map risk accent colors (strictly hex values for xhtml2pdf compatibility)
+        risk_lower = str(risk_level).lower()
+        if 'severe' in risk_lower or 'high' in risk_lower:
+            risk_accent_color = '#ff3366'  # Pink/Red
+            risk_bg_color = '#2d141e'
+        elif 'mod' in risk_lower or 'medium' in risk_lower or 'amber' in risk_lower:
+            risk_accent_color = '#ff9d00'  # Amber
+            risk_bg_color = '#2d2214'
+        else:
+            risk_accent_color = '#39d353'  # Emerald Green
+            risk_bg_color = '#142d1a'
 
-        # Convert lists to flowing prose paragraphs
+        # Prose formatter
         findings_prose = " ".join([f.strip() for f in findings])
         recs_prose = " ".join([r.strip() for r in recs])
 
-        # Badges helper
-        def badge_color(val):
-            val = str(val).lower()
-            if 'high' in val: return 'bg-red'
-            if 'medium' in val: return 'bg-yellow'
-            if 'low' in val: return 'bg-green'
-            if 'not detected' in val or 'none' in val: return 'bg-gray'
-            if 'detected' in val: return 'bg-blue'
-            return 'bg-gray'
-            
-        def status_display(val):
-            val_lower = str(val).lower()
-            if 'high' in val_lower: return 'HIGH'
-            if 'medium' in val_lower: return 'MEDIUM'
-            if 'low' in val_lower: return 'LOW'
-            if 'detected' in val_lower and 'not' not in val_lower: return 'DETECTED'
-            return 'NONE'
-
-        def get_bar_metrics(val):
-            val_lower = str(val).lower()
-            if 'high' in val_lower:
-                return 90, '#ff3366'
-            if 'medium' in val_lower:
-                return 60, '#ff9d00'
-            if 'low' in val_lower:
-                return 30, '#39d353'
-            if 'detected' in val_lower and 'not' not in val_lower:
-                return 80, '#0088ff'
-            return 5, '#475466'
-
-        veg_status = status_display(ea.get("vegetation", "Unknown"))
-        urban_density = status_display(ea.get("urban_density", "Unknown"))
-        water_presence = status_display(ea.get("water_presence", "Unknown"))
-        industrial_activity = status_display(ea.get("industrial_activity", "Unknown"))
-        environmental_risk = status_display(ea.get("environmental_risk", "Unknown"))
-
-        veg_color = badge_color(ea.get("vegetation", "Unknown"))
-        urban_color = badge_color(ea.get("urban_density", "Unknown"))
-        water_color = badge_color(ea.get("water_presence", "Unknown"))
-        industrial_color = badge_color(ea.get("industrial_activity", "Unknown"))
-        environmental_color = badge_color(ea.get("environmental_risk", "Unknown"))
-
-        veg_pct, veg_bar_color = get_bar_metrics(ea.get("vegetation", "Unknown"))
-        urban_pct, urban_bar_color = get_bar_metrics(ea.get("urban_density", "Unknown"))
-        water_pct, water_bar_color = get_bar_metrics(ea.get("water_presence", "Unknown"))
-        industrial_pct, industrial_bar_color = get_bar_metrics(ea.get("industrial_activity", "Unknown"))
-        environmental_pct, environmental_bar_color = get_bar_metrics(ea.get("environmental_risk", "Unknown"))
-
-        # Construct lead paragraph narrative
-        summary_sentence = analysis_dict.get('summary', '') or ''
-        if summary_sentence and not summary_sentence.endswith('.'):
-            summary_sentence += '.'
-        
-        lead_text = f"Geospatial telemetry confirms a {dominant_cover.lower()} layout. {summary_sentence} The status is currently flagged as {overall_status.lower()} with a {risk_level.lower()} risk rating."
-
-        # Construct closing summary block takeaway
-        top_rec = recs[0] if recs else "maintain standard monitoring frequency"
-        top_rec_clean = top_rec.strip().rstrip('.')
-        summary_block_text = (
-            f"<strong>In summary, the telemetry classifies this location as a {dominant_cover.lower()} zone with a {risk_level.lower()} risk classification.</strong> "
-            f"To optimize environmental stability and mitigate potential hazards, analysts should {top_rec_clean.lower()}. "
-            "Continuous monitoring of indicators remains critical for early detection of rapid landscape transformations."
-        )
-
-        # Construct Location row if coordinates/bbox are present
-        location_html = ""
+        # 4. Resolve Location & Weather Correlation Alerts
         lat = analysis_dict.get("latitude")
         lng = analysis_dict.get("longitude")
         bbox_val = analysis_dict.get("bbox")
         advisory_match = analysis_dict.get("external_advisory_match")
+        flood_reasoning = analysis_dict.get("flood_risk_reasoning")
 
-        advisory_text = ""
-        if advisory_match is not None:
-            if advisory_match:
-                advisory_text = '<div style="color: #ff3366; font-size: 10px; font-family: Arial, sans-serif; margin-top: 2px; font-weight: bold;">Matches an active GDACS flood advisory for this region</div>'
-            else:
-                advisory_text = '<div style="color: #a09cb4; font-size: 10px; font-family: Arial, sans-serif; margin-top: 2px;">No matching external advisory &mdash; localized detection only.</div>'
-
+        location_text = "N/A"
         if lat is not None and lng is not None:
             lat_dir = "N" if lat >= 0 else "S"
             lng_dir = "E" if lng >= 0 else "W"
-            location_html = f'<div class="gen-date" style="margin-top: 4px;">Location: {abs(lat):.4f}&deg; {lat_dir}, {abs(lng):.4f}&deg; {lng_dir}</div>{advisory_text}'
+            location_text = f"{abs(lat):.4f}° {lat_dir}, {abs(lng):.4f}° {lng_dir}"
         elif bbox_val and len(bbox_val) == 4:
             min_lat, min_lng, max_lat, max_lng = bbox_val
             min_lat_dir = "N" if min_lat >= 0 else "S"
             min_lng_dir = "E" if min_lng >= 0 else "W"
             max_lat_dir = "N" if max_lat >= 0 else "S"
             max_lng_dir = "E" if max_lng >= 0 else "W"
-            location_html = (
-                f'<div class="gen-date" style="margin-top: 4px;">'
-                f'Location Box: [{abs(min_lat):.4f}&deg; {min_lat_dir}, {abs(min_lng):.4f}&deg; {min_lng_dir}] to '
-                f'[{abs(max_lat):.4f}&deg; {max_lat_dir}, {abs(max_lng):.4f}&deg; {max_lng_dir}]'
-                f'</div>{advisory_text}'
+            location_text = f"BBox: [{abs(min_lat):.3f}°{min_lat_dir}, {abs(min_lng):.3f}°{min_lng_dir}] to [{abs(max_lat):.3f}°{max_lat_dir}, {abs(max_lng):.3f}°{max_lng_dir}]"
+
+        advisory_section = ""
+        if advisory_match:
+            advisory_section = (
+                f'<div style="background-color: #2d141e; border-left: 3px solid #ff3366; '
+                f'padding: 8px 12px; margin-top: 10px; font-size: 10px; color: #ffcaea; font-family: Courier, monospace;">'
+                f'<strong>[ALERT] GDACS REGIONAL INUNDATION WARNING:</strong> Active satellite flood advisory detected for these coordinates.'
+                f'</div>'
             )
 
-        # Determine single accent color matching risk level
-        risk_lower = str(risk_level).lower()
-        if 'severe' in risk_lower or 'high' in risk_lower:
-            risk_accent_color = '#ff3366' # red
-        elif 'mod' in risk_lower or 'medium' in risk_lower or 'amber' in risk_lower:
-            risk_accent_color = '#ff9d00' # amber
-        else:
-            risk_accent_color = '#39d353' # green
+        # 5. Extract Indicator values (0-100)
+        # Vegetation index
+        veg_score = analysis_dict.get('vegetation_health_score')
+        if veg_score is None:
+            for c in analysis_dict.get('classes', []):
+                if c.get('label') in ['Forest', 'Vegetation', 'Agriculture']:
+                    veg_score = c.get('pct')
+                    break
+        veg_score = float(veg_score or 0.0)
 
+        # Urban density index
+        urb_score = analysis_dict.get('urban_density_percent')
+        if urb_score is None:
+            for c in analysis_dict.get('classes', []):
+                if c.get('label') in ['Residential', 'Industrial']:
+                    urb_score = c.get('pct')
+                    break
+        urb_score = float(urb_score or 0.0)
+
+        # Water coverage
+        water_score = float(analysis_dict.get('water_coverage_percent') or 0.0)
+        
+        # Combined flood risk
+        flood_score = float(analysis_dict.get('flood_risk_score') or 0.0)
+
+        # 6. Build the Executive Summary Paragraph
+        summary_sentence = analysis_dict.get('summary', '') or ''
+        if summary_sentence and not summary_sentence.endswith('.'):
+            summary_sentence += '.'
+            
+        gpt_analysis = analysis_dict.get('gpt_analysis') or ''
+        gpt_paragraphs = [p.strip() for p in gpt_analysis.split('\n') if p.strip() and not p.strip().startswith('#')]
+        
+        if gpt_paragraphs:
+            exec_summary_text = gpt_paragraphs[0]
+        else:
+            exec_summary_text = (
+                f"Geospatial telemetry confirms a dominant {dominant_cover.lower()} landscape. "
+                f"The overall classification is marked as {overall_status.lower()} with a {risk_level.lower()} risk profile. "
+                f"{summary_sentence}"
+            )
+            
+        # Append early warning weather correlation to executive summary if triggered
+        if flood_reasoning and "Elevated risk:" in flood_reasoning:
+            exec_summary_text += f" <strong>{flood_reasoning}</strong>"
+
+        # 7. Render Temporal Trend Section (if comparative data exists)
+        trend_html = ""
+        # Check for comparison metrics in the analysis object
+        veg_delta = analysis_dict.get('vegetation_delta') or analysis_dict.get('deforestation_delta')
+        urb_delta = analysis_dict.get('urban_density_delta')
+        water_delta = analysis_dict.get('water_coverage_delta')
+        
+        if veg_delta is not None or urb_delta is not None or water_delta is not None:
+            veg_delta = float(veg_delta or 0.0)
+            urb_delta = float(urb_delta or 0.0)
+            water_delta = float(water_delta or 0.0)
+            
+            # Formulate trend visual assets
+            veg_arrow, veg_lbl, veg_color = ("↓", "Declining", "#ff3366") if veg_delta > 0 else (("↑", "Improving", "#39d353") if veg_delta < 0 else ("→", "Stable", "#a09cb4"))
+            urb_arrow, urb_lbl, urb_color = ("↑", "Sprawl", "#ff3366") if urb_delta > 5.0 else (("↓", "Improving", "#39d353") if urb_delta < -2.0 else ("→", "Stable", "#a09cb4"))
+            water_arrow, water_lbl, water_color = ("↑", "Inundation", "#ff3366") if water_delta > 5.0 else (("↓", "Drying", "#ff3366") if water_delta < -5.0 else ("→", "Stable", "#a09cb4"))
+            
+            # Check for overall trend score
+            overall_trend_score = analysis_dict.get('overall_trend_risk')
+            overall_trend_lbl = analysis_dict.get('overall_risk_label') or "Low"
+            
+            overall_trend_row = ""
+            if overall_trend_score is not None:
+                trend_risk_color = "#ff3366" if overall_trend_lbl.lower() in ["high", "severe"] else ("#ff9d00" if overall_trend_lbl.lower() == "moderate" else "#39d353")
+                overall_trend_row = f"""
+                <tr style="background-color: #11112e;">
+                    <td style="padding: 8px 12px; font-size: 10px; font-weight: bold; color: #ffffff;">Overall Cumulative Risk Score</td>
+                    <td style="padding: 8px 12px; text-align: center; font-size: 10px; font-weight: bold; color: #ffffff;">{overall_trend_score:.1f} / 100.0</td>
+                    <td style="padding: 8px 12px; text-align: center; font-size: 10px; font-weight: bold; color: {trend_risk_color};">{overall_trend_lbl}</td>
+                    <td style="padding: 8px 12px; text-align: right; font-size: 8px; font-weight: bold; color: #a09cb4;">HISTORICAL TREND</td>
+                </tr>
+                """
+                
+            trend_html = f"""
+            <div class="section-title">Observed Temporal Change (Before vs. After)</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; background-color: #0c0c1e; border: 1px solid #22223a;">
+                <thead>
+                    <tr style="background-color: #11112e; border-bottom: 1px solid #22223a;">
+                        <th style="padding: 6px 12px; text-align: left; font-family: monospace; font-size: 8px; color: #a09cb4; width: 35%;">MEASUREMENT INDICATOR</th>
+                        <th style="padding: 6px 12px; text-align: center; font-family: monospace; font-size: 8px; color: #a09cb4; width: 25%;">HISTORICAL CHANGE</th>
+                        <th style="padding: 6px 12px; text-align: center; font-family: monospace; font-size: 8px; color: #a09cb4; width: 20%;">TREND STATUS</th>
+                        <th style="padding: 6px 12px; text-align: right; font-family: monospace; font-size: 8px; color: #a09cb4; width: 20%;">IMPACT</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr style="border-bottom: 1px solid #22223a;">
+                        <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Vegetation Canopy Coverage</td>
+                        <td style="padding: 8px 12px; text-align: center; font-size: 10px; color: #ffffff;">{-veg_delta:+.1f}%</td>
+                        <td style="padding: 8px 12px; text-align: center; font-size: 10px; color: {veg_color}; font-weight: bold;">{veg_arrow} {veg_lbl}</td>
+                        <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: {veg_color}; font-weight: bold;">{"CRITICAL" if veg_lbl == "Declining" else "STABLE"}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #22223a;">
+                        <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Built-up Urban Sprawl</td>
+                        <td style="padding: 8px 12px; text-align: center; font-size: 10px; color: #ffffff;">{urb_delta:+.1f}%</td>
+                        <td style="padding: 8px 12px; text-align: center; font-size: 10px; color: {urb_color}; font-weight: bold;">{urb_arrow} {urb_lbl}</td>
+                        <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: {urb_color}; font-weight: bold;">{"ALERT" if urb_lbl == "Sprawl" else "STABLE"}</td>
+                    </tr>
+                    <tr style="border-bottom: 1px solid #22223a;">
+                        <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Surface Water Exposure</td>
+                        <td style="padding: 8px 12px; text-align: center; font-size: 10px; color: #ffffff;">{water_delta:+.1f}%</td>
+                        <td style="padding: 8px 12px; text-align: center; font-size: 10px; color: {water_color}; font-weight: bold;">{water_arrow} {water_lbl}</td>
+                        <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: {water_color}; font-weight: bold;">{"HAZARD" if water_lbl in ["Inundation", "Drying"] else "STABLE"}</td>
+                    </tr>
+                    {overall_trend_row}
+                </tbody>
+            </table>
+            """
+
+        # 8. Render Takeaway sentence
+        takeaway_sentence = (
+            f"In summary, the telemetry classifies this location as a {dominant_cover.lower()} zone with a {risk_level.lower()} risk classification. "
+            f"Continuous monitoring of indicators remains critical for early detection of rapid landscape transformations."
+        )
+
+        # 9. Clean image wrapper
+        image_html = ""
+        if image_base64:
+            # Table cell containing preview image
+            image_html = f"""
+            <td style="width: 28%; text-align: right; vertical-align: top; padding-left: 10px;">
+                <img src="{image_base64}" style="width: 160px; height: 160px; border: 2px solid #22223a;" alt="Scene Preview" />
+            </td>
+            """
+
+        # 10. Assemble limitations list
+        standard_limitations = [
+            "Zero-shot semantic interpretation — no model fine-tuning on EO labels.",
+            "No pixel-level segmentation or object boundary detection.",
+            "Interpretation is based solely on image-text similarity and proxy RGB spectral analysis.",
+            "Performance may degrade on atypical viewpoints, cloud cover, or low-resolution inputs."
+        ]
+        limitations_joined = " ".join(standard_limitations)
+
+        # Compile final HTML template (strictly table-based structure for ReportLab compatibility)
         html = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Orionix Geospatial Dashboard</title>
+    <title>Orionix Geospatial Briefing</title>
     <style>
+        @page {{
+            size: A4;
+            margin: 1.2cm;
+            margin-bottom: 1.8cm;
+        }}
         body {{
             font-family: Arial, Helvetica, sans-serif;
             background-color: #03030a;
             color: #f0edff;
             margin: 0;
-            padding: 10px 15px;
-            font-size: 12px;
+            padding: 0;
+            font-size: 11px;
+            line-height: 1.4;
         }}
-        
-        .container {{
-            width: 100%;
+        table {{
+            border-collapse: collapse;
         }}
-
         .logo-text {{
             font-family: Courier, monospace;
             font-size: 14px;
             font-weight: bold;
             color: #ffffff;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }}
-
         h1 {{
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             color: #ffffff;
-            margin: 2px 0 0 0;
+            margin: 0;
+            padding: 0;
         }}
-
         h2 {{
-            font-size: 11px;
+            font-size: 10px;
             color: #00f0ff;
             font-family: Courier, monospace;
             font-weight: normal;
             text-transform: uppercase;
             margin: 2px 0 0 0;
+            padding: 0;
         }}
-
-        .gen-date {{
+        .meta-text {{
             color: #a09cb4;
             font-size: 9px;
             font-family: Courier, monospace;
-            margin: 4px 0 0 0;
+            margin-top: 5px;
         }}
-        
-        .satellite-preview {{
-            border: 2px solid #22223a;
-            width: 180px;
-            height: auto;
-        }}
-        
         .section-title {{
-            font-size: 11px;
+            font-size: 10px;
             font-weight: bold;
-            margin-top: 14px;
-            margin-bottom: 8px;
+            margin-top: 15px;
+            margin-bottom: 6px;
             text-transform: uppercase;
-            color: #f0edff;
+            color: #00f0ff;
             font-family: Courier, monospace;
             border-bottom: 1px solid #22223a;
-            padding-bottom: 3px;
+            padding-bottom: 2px;
         }}
-
-        /* Lead Block Styling */
-        .lead-block {{
+        .summary-box {{
+            background-color: #0c0c1e;
             border-left: 4px solid {risk_accent_color};
-            background-color: #0d0d21;
             padding: 10px 14px;
             margin-bottom: 12px;
-            border-radius: 0 4px 4px 0;
         }}
-        .lead-text-p {{
-            margin: 0;
-            font-size: 11px;
-            line-height: 1.5;
-            color: #d2cffd;
-            font-style: italic;
-        }}
-
-        /* Redesigned Three-tier Layout */
-        .headline-table {{
-            width: 100%;
-            border: 1px solid #22223a;
-            background-color: #11112e;
-            margin-bottom: 8px;
-            border-collapse: collapse;
-        }}
-        .headline-label {{
-            font-size: 8px;
-            color: #a09cb4;
-            text-transform: uppercase;
-            font-family: Courier, monospace;
-            margin-bottom: 2px;
-        }}
-        .headline-val {{
-            font-size: 15px;
-            font-weight: bold;
-            color: #ffffff;
-        }}
-        
-        .detail-table {{
+        .metrics-table {{
             width: 100%;
             border: 1px solid #22223a;
             background-color: #0c0c1e;
-            margin-bottom: 8px;
-            border-collapse: collapse;
-        }}
-        .detail-label {{
-            font-size: 8px;
-            color: #a09cb4;
-            font-family: Courier, monospace;
-            text-transform: uppercase;
-        }}
-        .detail-val {{
-            font-size: 10px;
-            font-weight: bold;
-            color: #ffffff;
-            margin-left: 4px;
-        }}
-
-        .indicator-table {{
-            width: 100%;
-            border: 1px solid #22223a;
-            background-color: #11112e;
-            border-collapse: collapse;
             margin-bottom: 12px;
         }}
-        .indicator-row {{
-            border-bottom: 1px solid #22223a;
-        }}
-        .indicator-row:last-child {{
-            border-bottom: none;
-        }}
-        .indicator-name {{
-            padding: 6px 12px;
-            font-family: Courier, monospace;
-            font-size: 9px;
+        .metrics-table th {{
+            background-color: #11112e;
             color: #a09cb4;
-            text-transform: uppercase;
-        }}
-        .indicator-value {{
-            padding: 6px 12px;
-            text-align: right;
-        }}
-        
-        .badge {{
-            padding: 2px 6px;
-            border-radius: 6px;
+            font-family: Courier, monospace;
             font-size: 8px;
             font-weight: bold;
             text-transform: uppercase;
-            font-family: Courier, monospace;
+            padding: 5px 8px;
+            border: 1px solid #22223a;
         }}
-        
-        /* Hardcoded Hex Badge Backgrounds */
-        .bg-red {{ background-color: #361c20; color: #fca5a5; border: 1px solid #5c2a30; }}
-        .bg-yellow {{ background-color: #3b2c14; color: #fcd34d; border: 1px solid #61471d; }}
-        .bg-green {{ background-color: #183624; color: #a7f3d0; border: 1px solid #275c3d; }}
-        .bg-blue {{ background-color: #162a4a; color: #bfdbfe; border: 1px solid #2a4c80; }}
-        .bg-gray {{ background-color: #2d3540; color: #cbd5e1; border: 1px solid #475466; }}
-        
-        @media print {{
-            body {{ background-color: #ffffff; color: #000000; }}
-            .headline-table, .detail-table, .indicator-table {{ background-color: #f8f9fa; border: 1px solid #dee2e6; }}
-            h1, .logo-text {{ color: #000000; }}
+        .metrics-table td {{
+            color: #ffffff;
+            font-size: 10px;
+            padding: 7px 8px;
+            text-align: center;
+            border: 1px solid #22223a;
         }}
     </style>
 </head>
 <body>
-    <div class="container">
+    <!-- Running Page Footer for PDF -->
+    <div id="pdf-footer" style="position: fixed; bottom: -30px; left: 0px; right: 0px; height: 30px; font-family: Arial, Helvetica, sans-serif;">
+        <table style="width: 100%; border: none;">
+            <tr>
+                <td style="text-align: left; font-size: 8px; color: #718096; border: none; background: none;">CONFIDENTIAL - ORIONIX GEOSPATIAL BRIEFING</td>
+                <td style="text-align: right; font-size: 8px; color: #718096; border: none; background: none;">Page <pdf:pagenumber /> of <pdf:pagecount /></td>
+            </tr>
+        </table>
+    </div>
+
+    <div style="width: 100%;">
         
-        <!-- HEADER LAYOUT TABLE (Replaces Grid/Flexbox for xhtml2pdf) -->
+        <!-- HEADER PANEL -->
         <table style="width: 100%; border-bottom: 1px solid #22223a; padding-bottom: 10px; margin-bottom: 15px;">
             <tr>
-                <td style="width: 70%; vertical-align: middle;">
+                <td style="width: 72%; vertical-align: top;">
                     <div class="logo-text"><span style="color: #00f0ff;">●</span> Orionix</div>
-                    <h1>Geospatial Intelligence Report</h1>
-                    <h2>Satellite Interpretation Framework</h2>
-                    <div class="gen-date">Generated: {now}</div>
-                    {location_html}
+                    <h1>Geospatial Intelligence Briefing</h1>
+                    <h2>Remote Sensing Telemetry Analysis</h2>
+                    <div class="meta-text">
+                        <div>Report ID: {report_id}</div>
+                        <div>Generated: {now_utc}</div>
+                        <div>Coordinates: {location_text}</div>
+                        {f"<div>Provenance: Sourced from ISRO portal ({analysis_dict.get('isro_source')})</div>" if analysis_dict.get('isro_sourced') else ""}
+                    </div>
                 </td>
-                <td style="width: 30%; text-align: right; vertical-align: middle;">
-                    {img_tag}
-                </td>
+                {image_html}
             </tr>
         </table>
 
-        <!-- LEAD PARAGRAPH BLOCK -->
-        <div class="lead-block">
-            <p class="lead-text-p">{lead_text}</p>
+        <!-- GDACS ADVISORY IF ACTIVE -->
+        {advisory_section}
+
+        <!-- EXECUTIVE SUMMARY -->
+        <div class="section-title">Executive Summary</div>
+        <div class="summary-box">
+            <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #d2cffd; text-align: justify;">
+                {exec_summary_text}
+            </p>
         </div>
 
-        <!-- TOP TIER: HEADLINE SUMMARY -->
-        <table class="headline-table">
-            <tr>
-                <td style="padding: 10px 12px; width: 50%; border-right: 1px solid #22223a; vertical-align: middle;">
-                    <div class="headline-label">Overall Status</div>
-                    <div class="headline-val">{overall_status}</div>
-                </td>
-                <td style="padding: 10px 12px; width: 50%; text-align: right; vertical-align: middle;">
-                    <div class="headline-label">Risk Level</div>
-                    <div class="headline-val" style="color: {risk_accent_color};">{risk_level}</div>
-                </td>
-            </tr>
+        <!-- KEY METRICS TABLE -->
+        <table class="metrics-table">
+            <thead>
+                <tr>
+                    <th style="width: 25%;">Primary Classification</th>
+                    <th style="width: 25%;">Secondary Classification</th>
+                    <th style="width: 25%;">Confidence Assessment</th>
+                    <th style="width: 25%;">Assessed Risk Level</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>{dominant_cover}</td>
+                    <td>{secondary_cover}</td>
+                    <td>{confidence}</td>
+                    <td style="color: {risk_accent_color}; font-weight: bold; background-color: {risk_bg_color};">{risk_level.upper()}</td>
+                </tr>
+            </tbody>
         </table>
 
-        <!-- MIDDLE TIER: SUPPORTING METRICS -->
-        <table class="detail-table">
-            <tr>
-                <td style="padding: 6px 12px; width: 33.3%; border-right: 1px solid #22223a; vertical-align: middle;">
-                    <span class="detail-label">Primary:</span>
-                    <span class="detail-val">{dominant_cover}</span>
-                </td>
-                <td style="padding: 6px 12px; width: 33.3%; border-right: 1px solid #22223a; text-align: center; vertical-align: middle;">
-                    <span class="detail-label">Secondary:</span>
-                    <span class="detail-val">{secondary_cover}</span>
-                </td>
-                <td style="padding: 6px 12px; width: 33.3%; text-align: right; vertical-align: middle;">
-                    <span class="detail-label">Confidence:</span>
-                    <span class="detail-val">{confidence}</span>
-                </td>
-            </tr>
-        </table>
-
-        <!-- BOTTOM TIER: ENVIRONMENTAL INDICATORS TABLE WITH BARS -->
+        <!-- ENVIRONMENTAL INDICATORS -->
         <div class="section-title">Environmental Indicators</div>
-        <table class="indicator-table">
-            <tr class="indicator-row">
-                <td class="indicator-name" style="width: 30%;">Vegetation Health</td>
-                <td style="width: 50%; vertical-align: middle; padding: 0 10px;">
-                    <div style="background-color: #1a1a3a; height: 6px; border-radius: 3px; width: 100%; overflow: hidden;">
-                        <div style="background-color: {veg_bar_color}; width: {veg_pct}%; height: 100%; border-radius: 3px;"></div>
-                    </div>
-                </td>
-                <td class="indicator-value" style="width: 20%;"><span class="badge {veg_color}">{veg_status}</span></td>
-            </tr>
-            <tr class="indicator-row">
-                <td class="indicator-name" style="width: 30%;">Urban / Built-up Density</td>
-                <td style="width: 50%; vertical-align: middle; padding: 0 10px;">
-                    <div style="background-color: #1a1a3a; height: 6px; border-radius: 3px; width: 100%; overflow: hidden;">
-                        <div style="background-color: {urban_bar_color}; width: {urban_pct}%; height: 100%; border-radius: 3px;"></div>
-                    </div>
-                </td>
-                <td class="indicator-value" style="width: 20%;"><span class="badge {urban_color}">{urban_density}</span></td>
-            </tr>
-            <tr class="indicator-row">
-                <td class="indicator-name" style="width: 30%;">Water Presence</td>
-                <td style="width: 50%; vertical-align: middle; padding: 0 10px;">
-                    <div style="background-color: #1a1a3a; height: 6px; border-radius: 3px; width: 100%; overflow: hidden;">
-                        <div style="background-color: {water_bar_color}; width: {water_pct}%; height: 100%; border-radius: 3px;"></div>
-                    </div>
-                </td>
-                <td class="indicator-value" style="width: 20%;"><span class="badge {water_color}">{water_presence}</span></td>
-            </tr>
-            <tr class="indicator-row">
-                <td class="indicator-name" style="width: 30%;">Industrial Activity</td>
-                <td style="width: 50%; vertical-align: middle; padding: 0 10px;">
-                    <div style="background-color: #1a1a3a; height: 6px; border-radius: 3px; width: 100%; overflow: hidden;">
-                        <div style="background-color: {industrial_bar_color}; width: {industrial_pct}%; height: 100%; border-radius: 3px;"></div>
-                    </div>
-                </td>
-                <td class="indicator-value" style="width: 20%;"><span class="badge {industrial_color}">{industrial_activity}</span></td>
-            </tr>
-            <tr class="indicator-row">
-                <td class="indicator-name" style="width: 30%;">Environmental Risk</td>
-                <td style="width: 50%; vertical-align: middle; padding: 0 10px;">
-                    <div style="background-color: #1a1a3a; height: 6px; border-radius: 3px; width: 100%; overflow: hidden;">
-                        <div style="background-color: {environmental_bar_color}; width: {environmental_pct}%; height: 100%; border-radius: 3px;"></div>
-                    </div>
-                </td>
-                <td class="indicator-value" style="width: 20%;"><span class="badge {environmental_color}">{environmental_risk}</span></td>
-            </tr>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; background-color: #0c0c1e; border: 1px solid #22223a;">
+            <thead>
+                <tr style="background-color: #11112e; border-bottom: 1px solid #22223a;">
+                    <th style="padding: 6px 12px; text-align: left; font-family: monospace; font-size: 8px; color: #a09cb4; width: 30%;">INDICATOR</th>
+                    <th style="padding: 6px 12px; text-align: left; font-family: monospace; font-size: 8px; color: #a09cb4; width: 50%;">TELEMETRY METRIC</th>
+                    <th style="padding: 6px 12px; text-align: right; font-family: monospace; font-size: 8px; color: #a09cb4; width: 20%;">VALUE</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Row 1: Vegetation -->
+                <tr style="border-bottom: 1px solid #22223a;">
+                    <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Vegetation Health Proxy</td>
+                    <td style="padding: 8px 12px; vertical-align: middle;">
+                        <table style="width: 100%; border-collapse: collapse; height: 8px; background-color: #1a1a3a;">
+                            <tr>
+                                <td style="width: {int(veg_score)}%; background-color: #39d353; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
+                                <td style="width: {100 - int(veg_score)}%; background-color: #1a1a3a; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: #ffffff; font-weight: bold;">{veg_score:.1f}%</td>
+                </tr>
+                <!-- Row 2: Urban -->
+                <tr style="border-bottom: 1px solid #22223a;">
+                    <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Urban / Built-up Density</td>
+                    <td style="padding: 8px 12px; vertical-align: middle;">
+                        <table style="width: 100%; border-collapse: collapse; height: 8px; background-color: #1a1a3a;">
+                            <tr>
+                                <td style="width: {int(urb_score)}%; background-color: #ff9d00; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
+                                <td style="width: {100 - int(urb_score)}%; background-color: #1a1a3a; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: #ffffff; font-weight: bold;">{urb_score:.1f}%</td>
+                </tr>
+                <!-- Row 3: Water -->
+                <tr style="border-bottom: 1px solid #22223a;">
+                    <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Surface Water Exposure</td>
+                    <td style="padding: 8px 12px; vertical-align: middle;">
+                        <table style="width: 100%; border-collapse: collapse; height: 8px; background-color: #1a1a3a;">
+                            <tr>
+                                <td style="width: {int(water_score)}%; background-color: #0088ff; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
+                                <td style="width: {100 - int(water_score)}%; background-color: #1a1a3a; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: #ffffff; font-weight: bold;">{water_score:.1f}%</td>
+                </tr>
+                <!-- Row 4: Combined Flood Risk -->
+                <tr>
+                    <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Combined Flood Hazard Risk</td>
+                    <td style="padding: 8px 12px; vertical-align: middle;">
+                        <table style="width: 100%; border-collapse: collapse; height: 8px; background-color: #1a1a3a;">
+                            <tr>
+                                <td style="width: {int(flood_score)}%; background-color: {risk_accent_color}; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
+                                <td style="width: {100 - int(flood_score)}%; background-color: #1a1a3a; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
+                            </tr>
+                        </table>
+                    </td>
+                    <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: #ffffff; font-weight: bold;">{flood_score:.1f}%</td>
+                </tr>
+            </tbody>
         </table>
 
-        <!-- KEY FINDINGS & AI RECOMMENDATIONS TABLE (Prose paragraphs) -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px;">
+        <!-- TEMPORAL TRENDS IF APPLICABLE -->
+        {trend_html}
+
+        <!-- FINDINGS & RECOMMENDATIONS -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
             <tr>
-                <td style="width: 50%; vertical-align: top; padding-right: 12px;">
+                <td style="width: 48%; vertical-align: top; padding-right: 2%;">
                     <div class="section-title">Key Findings</div>
-                    <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #a09cb4;">{findings_prose}</p>
+                    <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #a09cb4; text-align: justify;">
+                        {findings_prose}
+                    </p>
                 </td>
-                <td style="width: 50%; vertical-align: top; padding-left: 12px;">
+                <td style="width: 48%; vertical-align: top; padding-left: 2%;">
                     <div class="section-title">AI Recommendations</div>
-                    <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #a09cb4;">{recs_prose}</p>
+                    <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #a09cb4; text-align: justify;">
+                        {recs_prose}
+                    </p>
                 </td>
             </tr>
         </table>
 
-        <!-- CLOSING SUMMARY BLOCK -->
-        <div style="border-top: 1px solid #22223a; padding-top: 10px; margin-top: 15px;">
-            <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #f0edff;">
-                {summary_block_text}
+        <!-- CLOSING TAKEAWAY SUMMARY -->
+        <div style="border-top: 1px solid #22223a; padding-top: 10px; margin-top: 15px; margin-bottom: 20px;">
+            <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #ffffff; font-weight: bold;">
+                {takeaway_sentence}
             </p>
+        </div>
+
+        <!-- BRIEFING FOOTER & DISCLAIMERS -->
+        <div style="border-top: 1px solid #22223a; padding-top: 10px; margin-top: 20px; font-size: 8px; color: #718096; text-align: center; line-height: 1.4;">
+            <div><strong>DATA SOURCES:</strong> Sentinel-2 / Landsat telemetry via Esri imagery endpoints, ISRO Bhuvan/VEDAS EO imagery portals (where flagged)</div>
+            <div style="margin-top: 3px; font-style: italic;"><strong>LIMITATIONS DISCLAIMER:</strong> {limitations_joined}</div>
+            <div style="margin-top: 5px; font-weight: bold; color: #a09cb4;">Generated by Orionix — GPT-OSS + RemoteCLIP Vision Bridge</div>
         </div>
 
     </div>

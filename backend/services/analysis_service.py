@@ -38,6 +38,7 @@ from backend.interpreter.eo_interpreter import interpret
 from backend.interpreter.eo_schema import SimilarityEntry
 from backend.interpreter.eo_rules import compute_flood_risk_score
 from backend.services.disaster_feed import query_gdacs_flood_alerts
+from backend.services.weather_service import weather_service
 
 from backend.prompts.prompt_builder import prompt_builder
 from backend.schemas.prompt import EOContext
@@ -382,10 +383,18 @@ class AnalysisService:
         agricultural_presence_val = "High" if "forest" in str(eo_result.dominant_land_cover).lower() or "agricult" in str(eo_result.dominant_land_cover).lower() or "crop" in str(eo_result.dominant_land_cover).lower() else "Low"
         water_pct_val = raw_outputs.get("water_coverage_percent") or 0.0
 
+        # Fetch rainfall details for weather correlation if location is available
+        recent_rain = 0.0
+        forecast_rain = 0.0
+        if target_lat is not None and target_lng is not None:
+            recent_rain, forecast_rain = weather_service.get_rainfall_data(target_lat, target_lng)
+
         flood_risk = compute_flood_risk_score(
             water_coverage_percent=water_pct_val,
             urban_density=urban_density_val,
-            agricultural_presence=agricultural_presence_val
+            agricultural_presence=agricultural_presence_val,
+            recent_rainfall=recent_rain,
+            forecast_rainfall=forecast_rain
         )
 
         response = AnalysisResponse(

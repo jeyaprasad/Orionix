@@ -337,7 +337,7 @@ export function MapSelector({ onConfirm, onCancel, waterMaskBase64, analyzedBbox
 
       if (showOverlay) {
         const { minLat, minLng, maxLat, maxLng } = analyzedBbox;
-        const coordinates = [
+        const coordinates: [[number, number], [number, number], [number, number], [number, number]] = [
           [minLng, maxLat], // top-left
           [maxLng, maxLat], // top-right
           [maxLng, minLat], // bottom-right

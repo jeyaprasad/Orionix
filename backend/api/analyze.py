@@ -19,6 +19,7 @@ from fastapi import APIRouter, File, UploadFile, Form, HTTPException, status
 from typing import Optional
 from backend.schemas.analysis import AnalysisResponse, FloodComparisonResponse, VegetationComparisonResponse
 from backend.services.analysis_service import analysis_service
+from backend.services.trend_analysis import trend_analysis_service
 from backend.utils.logger import logger
 from backend.vision.water_detection import detect_water_extent
 from backend.vision.image_loader import validate_and_load_image
@@ -340,11 +341,19 @@ async def compare_vegetation(
         else:
             urban_growth_class = "urban growth: rapid"
 
+        # Run Trend Analysis service
+        trend_res = trend_analysis_service.analyze_trends(
+            vegetation_delta=veg_delta,
+            water_coverage_delta=water_delta,
+            urban_density_delta=urb_delta
+        )
+
         total_ms = (time.perf_counter() - request_start) * 1000
         logger.info(
             f"[/api/analyze/compare] Completed in {total_ms:.0f}ms. "
             f"VegDelta={veg_delta:.2f}%, UrbanDelta={urb_delta:.2f}%, WaterDelta={water_delta:.2f}%, "
-            f"DeforestClass='{deforest_class}', UrbanClass='{urban_growth_class}'."
+            f"DeforestClass='{deforest_class}', UrbanClass='{urban_growth_class}', "
+            f"OverallTrendRisk={trend_res['overall_trend_risk']} ({trend_res['overall_risk_label']})."
         )
 
         return VegetationComparisonResponse(
@@ -357,6 +366,12 @@ async def compare_vegetation(
             water_coverage_delta=round(water_delta, 2),
             deforestation_classification=deforest_class,
             urban_growth_classification=urban_growth_class,
+            # Trend Analysis fields
+            overall_trend_risk=trend_res["overall_trend_risk"],
+            overall_risk_label=trend_res["overall_risk_label"],
+            vegetation_trend=trend_res["vegetation"]["trend"],
+            urban_trend=trend_res["urban_density"]["trend"],
+            water_trend=trend_res["water_coverage"]["trend"],
         )
 
     except HTTPException:

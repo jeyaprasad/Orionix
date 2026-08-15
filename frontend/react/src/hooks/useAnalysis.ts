@@ -43,6 +43,18 @@ export interface AnalysisResult {
   flood_risk_reasoning?: string;
   external_advisory_match?: boolean;
   external_advisory_summary?: string;
+  metadata?: any;
+  deforestation_delta?: number;
+  vegetation_delta?: number;
+  urban_density_delta?: number;
+  water_coverage_delta?: number;
+  deforestation_classification?: string;
+  urban_growth_classification?: string;
+  overall_trend_risk?: number;
+  overall_risk_label?: string;
+  vegetation_trend?: string;
+  urban_trend?: string;
+  water_trend?: string;
 }
 
 export interface ChatMessage {
@@ -69,9 +81,70 @@ export const PIPELINE_STAGES = [
   { icon: "💬", title: "Generating GPT Response...", desc: "Synthesizing AI insights" },
 ];
 
+const MOCK_DEMO_RESULT: AnalysisResult = {
+  status: "success",
+  dominant_land_cover: "Forest",
+  secondary_land_cover: "Water",
+  confidence: "High",
+  summary: "The satellite image is interpreted with high relative confidence as a Forest scene. Secondary signals suggest the presence of Water.",
+  gpt_analysis: (
+    "### Geospatial Assessment Report\n\n" +
+    "**1. Landscape Composition**\n" +
+    "The region displays a dense, healthy forest canopy cover (64.3% classification confidence). A localized water reservoir occupies the southern bounds.\n\n" +
+    "**2. Environmental Risk Assessment**\n" +
+    "The high forest canopy indicates low terrain instability. However, seasonal water body expansion warrants observation to prevent agricultural runoff.\n\n" +
+    "**3. Strategic Recommendations**\n" +
+    "- Implement quarterly imagery passes to track canopy density changes.\n" +
+    "- Correlate local rainfall gauges with reservoir level anomalies."
+  ),
+  classes: [
+    { label: "Forest", pct: 64.3, color: "#39d353" },
+    { label: "Water", pct: 22.8, color: "#0088ff" },
+    { label: "Residential", pct: 8.5, color: "#ff9d00" },
+    { label: "Barren", pct: 4.4, color: "#a09cb4" }
+  ],
+  flags: [
+    { icon: "🛰️", label: "Demo Mode Enabled", level: "info" }
+  ],
+  insight: "The satellite image is interpreted with high relative confidence as a Forest scene with nearby water bodies.",
+  title: "Demo Forest Landscape Assessment",
+  risk_level: "Low",
+  water_coverage_percent: 12.5,
+  flood_risk_score: 18.0,
+  flood_risk_label: "Low",
+  flood_risk_reasoning: "Low risk: Surface water is contained within normal reservoir boundaries.",
+  latitude: 13.0827,
+  longitude: 80.2707,
+  metadata: {
+    vision_model: "RemoteCLIP ViT-L-14 (Demo)",
+    llm_model: "openai/gpt-oss-20b (Demo)",
+    processing_time_ms: 120.0,
+    timestamp: new Date().toISOString(),
+    version: "1.0"
+  }
+};
+
+const MOCK_DEMO_COMPARE = {
+  baseline_vegetation_index_score: 45.2,
+  current_vegetation_index_score: 32.1,
+  deforestation_delta: 13.1,
+  classification: "deforestation: declining",
+  vegetation_delta: 13.1,
+  urban_density_delta: 6.5,
+  water_coverage_delta: 2.1,
+  deforestation_classification: "deforestation: declining",
+  urban_growth_classification: "urban growth: moderate",
+  overall_trend_risk: 41.5,
+  overall_risk_label: "Moderate",
+  vegetation_trend: "Deteriorating",
+  urban_trend: "Deteriorating",
+  water_trend: "Stable"
+};
+
 export function useAnalysis() {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [demoMode, setDemoMode] = useState(false);
   const [status, setStatus] = useState<"idle" | "running" | "done">("idle");
   const [stageIndex, setStageIndex] = useState(-1);
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -244,6 +317,36 @@ export function useAnalysis() {
       timers.current.push(t);
     });
 
+    if (demoMode) {
+      await minDuration;
+      let simulatedData = { ...MOCK_DEMO_RESULT };
+      if (mode === "deforestation") {
+        simulatedData = {
+          ...simulatedData,
+          deforestation_delta: MOCK_DEMO_COMPARE.deforestation_delta,
+          vegetation_delta: MOCK_DEMO_COMPARE.vegetation_delta,
+          urban_density_delta: MOCK_DEMO_COMPARE.urban_density_delta,
+          water_coverage_delta: MOCK_DEMO_COMPARE.water_coverage_delta,
+          deforestation_classification: MOCK_DEMO_COMPARE.deforestation_classification,
+          urban_growth_classification: MOCK_DEMO_COMPARE.urban_growth_classification,
+          overall_trend_risk: MOCK_DEMO_COMPARE.overall_trend_risk,
+          overall_risk_label: MOCK_DEMO_COMPARE.overall_risk_label as any,
+          vegetation_trend: MOCK_DEMO_COMPARE.vegetation_trend,
+          urban_trend: MOCK_DEMO_COMPARE.urban_trend,
+          water_trend: MOCK_DEMO_COMPARE.water_trend,
+        };
+      }
+      setResult(simulatedData);
+      setStatus("done");
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: simulatedData.professional_report || simulatedData.gpt_analysis || simulatedData.insight, isReport: true }
+      ]);
+      setFile(null);
+      setPreviewUrl(null);
+      return;
+    }
+
     try {
       const controller = new AbortController();
       setAbortController(controller);
@@ -346,6 +449,21 @@ export function useAnalysis() {
     if (!question.trim() || !result || insightLoading) return;
 
     setMessages((m) => [...m, { role: "user", text: question }]);
+    
+    if (demoMode) {
+      setInsightLoading(true);
+      await new Promise(r => setTimeout(r, 600));
+      setInsightLoading(false);
+      let reply = "Based on the cached scene assessment, water coverage remains stable and no immediate flood hazards are detected.";
+      if (question.toLowerCase().includes("risk") || question.toLowerCase().includes("hazard")) {
+        reply = "Observed risk is classified as low for vegetation degradation, moderate for urban sprawl, and stable for surface water levels.";
+      } else if (question.toLowerCase().includes("vegetation") || question.toLowerCase().includes("ndvi")) {
+        reply = "Vegetation Index displays a mean NDVI proxy of 0.42, which corresponds to healthy, active green cover.";
+      }
+      setMessages((m) => [...m, { role: "assistant", text: reply }]);
+      return;
+    }
+
     setInsightLoading(true);
 
     try {
@@ -414,6 +532,8 @@ export function useAnalysis() {
     restoreSession,
     runAnalysis,
     askInsight,
-    abortRequest
+    abortRequest,
+    demoMode,
+    setDemoMode
   };
 }

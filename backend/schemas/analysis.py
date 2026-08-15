@@ -211,5 +211,12 @@ class VegetationComparisonResponse(BaseModel):
     water_coverage_delta: float = Field(default=0.0, description="Percentage-point change in water coverage (current - baseline).")
     deforestation_classification: str = Field(..., description="Deforestation classification: stable/declining/critical")
     urban_growth_classification: str = Field(..., description="Urban growth classification: stable/moderate/rapid")
+    
+    # Trend Analysis fields
+    overall_trend_risk: Optional[float] = Field(default=None, description="Combined overall trend risk score (0-100).")
+    overall_risk_label: Optional[str] = Field(default=None, description="Qualitative overall trend risk label: Low | Moderate | High.")
+    vegetation_trend: Optional[str] = Field(default=None, description="Trend direction: Improving | Stable | Deteriorating.")
+    urban_trend: Optional[str] = Field(default=None, description="Trend direction: Improving | Stable | Deteriorating.")
+    water_trend: Optional[str] = Field(default=None, description="Trend direction: Improving | Stable | Deteriorating.")
 
 

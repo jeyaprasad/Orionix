@@ -1212,3 +1212,51 @@ body {
 .cb-sidebar {
   display: none !important;
 }
+
+/* Architecture banner style */
+.cb-arch-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 13, 36, 0.7);
+  border: 1px solid rgba(120, 100, 255, 0.25);
+  padding: 8px 16px;
+  border-radius: 12px;
+  margin: 12px 24px 20px 24px;
+  font-family: 'Space Mono', monospace;
+  font-size: 11px;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+.cb-arch-step {
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-weight: bold;
+}
+
+.cb-arch-step.vision {
+  background: rgba(0, 229, 200, 0.12);
+  border: 1px solid rgba(0, 229, 200, 0.35);
+  color: var(--aurora);
+}
+
+.cb-arch-step.bridge {
+  background: rgba(120, 100, 255, 0.12);
+  border: 1px solid rgba(120, 100, 255, 0.35);
+  color: #a78bfa;
+}
+
+.cb-arch-step.reasoning {
+  background: rgba(244, 63, 94, 0.12);
+  border: 1px solid rgba(244, 63, 94, 0.35);
+  color: #fda4af;
+}
+
+.cb-arch-arrow {
+  margin: 0 10px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: bold;
+}
