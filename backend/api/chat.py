@@ -6,6 +6,8 @@ import time
 
 from backend.llm.openrouter import OpenRouterClient
 from backend.llm.gpt_service import GPTService
+from backend.prompts.prompt_builder import prompt_builder
+from backend.schemas.prompt import EOContext
 from backend.utils.logger import logger
 from backend.config.settings import settings
 
@@ -37,31 +39,33 @@ gpt_service = GPTService(provider)
 async def stream_chat(request: StreamChatRequest):
     logger.info(f"Received streaming chat request. Question: {request.question[:40]}...")
     
-    # 1. Ground response context in results
-    system_prompt = f"""You are Orionix, a helpful geospatial intelligence AI assistant.
-You are grounded in the following Earth Observation (EO) Analysis Result:
-Dominant Land Cover: {request.result.get('dominant_land_cover', 'N/A')}
-Secondary Land Cover: {request.result.get('secondary_land_cover', 'N/A')}
-Confidence: {request.result.get('confidence', 'N/A')}
-Risk Level: {request.result.get('risk_level', 'N/A')}
-Scene Type: {request.result.get('scene_type', 'N/A')}
+    # 1. Parse EOContext
+    try:
+        eo_context = EOContext(**request.result)
+    except Exception as e:
+        logger.warning(f"Failed to parse EOContext in stream_chat, falling back to dummy context: {e}")
+        eo_context = EOContext(
+            dominant_land_cover=request.result.get('dominant_land_cover', 'Unknown'),
+            secondary_land_cover=request.result.get('secondary_land_cover', 'Unknown'),
+            confidence=request.result.get('confidence', 'Low'),
+            summary=request.result.get('summary', 'No summary available.')
+        )
 
-Summary:
-{request.result.get('summary', 'No summary available.')}
-
-Grounded analysis details:
-{request.result.get('gpt_analysis', '')}
-
-Answer user questions accurately, professionally, and simply based on this context and any chat history. Keep your response extremely simple, concise, and focused — strictly maximum 3 to 4 sentences or bullet points (about 3-4 lines of content)."""
-
-    messages = [{"role": "system", "content": system_prompt}]
+    # 2. Build ground response context using PromptBuilder
+    payload = prompt_builder.build_followup_prompt(eo_context)
     
-    # 2. Append history
+    messages = [
+        {"role": "system", "content": payload.system_prompt},
+        {"role": "user", "content": payload.user_prompt},
+        {"role": "assistant", "content": "Understood. I will base my answers on this context."}
+    ]
+    
+    # 3. Append history
     for msg in request.history:
         role = "assistant" if msg.role == "assistant" else "user"
         messages.append({"role": role, "content": msg.text})
         
-    # 3. Append current question
+    # 4. Append current question
     messages.append({"role": "user", "content": request.question})
     
     # 4. Stream response

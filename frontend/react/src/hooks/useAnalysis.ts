@@ -460,7 +460,12 @@ export function useAnalysis() {
   }, [file, coordinates, bbox]);
 
   const askInsight = useCallback(async (question: string) => {
-    if (!question.trim() || !result || insightLoading) return;
+    if (!question.trim() || !result || insightLoading || isStreaming) return;
+
+    // Filter out the initial report and only keep actual chat turns
+    const chatHistory = messages
+      .filter((m) => !m.isReport)
+      .map((m) => ({ role: m.role, text: m.text }));
 
     setMessages((m) => [...m, { role: "user", text: question }]);
     
@@ -479,38 +484,59 @@ export function useAnalysis() {
     }
 
     setInsightLoading(true);
+    setIsStreaming(true);
 
     try {
       const controller = new AbortController();
       setAbortController(controller);
-      const res = await fetch(`${API_BASE}/api/insights`, {
+      const res = await fetch(`${API_BASE}/api/chat/stream`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           question,
-          eo_context: {
-            dominant_land_cover: result.dominant_land_cover,
-            secondary_land_cover: result.secondary_land_cover,
-            confidence: result.confidence,
-            summary: result.summary,
-          }
+          result: result,
+          history: chatHistory
         }),
         signal: controller.signal
       });
 
       if (!res.ok) throw new Error(`Insights request failed (${res.status})`);
 
-      const data = await res.json();
-      setMessages((m) => [...m, { role: "assistant", text: data.answer }]);
+      setInsightLoading(false); // First byte received
+      setMessages((m) => [...m, { role: "assistant", text: "" }]);
+
+      const reader = res.body?.getReader();
+      const decoder = new TextDecoder();
+      
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = decoder.decode(value, { stream: true });
+          
+          setMessages((m) => {
+            const newMessages = [...m];
+            const lastIndex = newMessages.length - 1;
+            if (newMessages[lastIndex].role === "assistant") {
+              newMessages[lastIndex] = {
+                ...newMessages[lastIndex],
+                text: newMessages[lastIndex].text + chunk
+              };
+            }
+            return newMessages;
+          });
+        }
+      }
     } catch (err: any) {
       if (err.name !== "AbortError") {
         setMessages((m) => [...m, { role: "assistant", text: `Insight generation is temporarily unavailable.` }]);
       }
     } finally {
       setInsightLoading(false);
+      setIsStreaming(false);
       setAbortController(null);
     }
-  }, [result, insightLoading]);
+  }, [result, insightLoading, isStreaming, messages, demoMode]);
 
   const ingestBhuvanScene = useCallback(async (sceneId: string, inputSource: string = "ISRO Bhuvan Sample") => {
     setStatus("running");

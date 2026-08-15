@@ -425,7 +425,7 @@ export const ChatInterface = memo(({
                 <div className="cb-msg-text">{m.text}</div>
               ) : m.isReport && result ? (
                 <>
-                  <AnalysisResults result={result} askInsight={askInsight} insightLoading={insightLoading} />
+                  <AnalysisResults result={result} setChatInput={setChatInput} insightLoading={insightLoading} />
                 </>
               ) : (
                 <div className="cb-markdown">
