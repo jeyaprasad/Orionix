@@ -106,6 +106,14 @@ class AnalysisService:
         pipeline_start = time.perf_counter()
         logger.info(f"[analyze_image] Pipeline started for '{filename}'.")
 
+        # Debug: log image fingerprint to confirm unique inputs per request
+        import hashlib
+        import uuid as _uuid
+        img_hash = hashlib.md5(image_bytes).hexdigest()
+        img_size = len(image_bytes)
+        request_id = str(_uuid.uuid4())[:8]
+        logger.info(f"[analyze_image] REQUEST_ID={request_id} | Image fingerprint: size={img_size:,} bytes, md5={img_hash}, filename='{filename}'")
+
         # ----------------------------------------------------------------
         # Stage 1 — Image loading and validation
         # ----------------------------------------------------------------
@@ -145,6 +153,14 @@ class AnalysisService:
             logger.info("[analyze_image] SOURCED FROM GENERIC UPLOAD")
 
         logger.info("[analyze_image] Stage 1: Image loaded successfully.")
+
+        # Determine input source label for frontend provenance tracking
+        if isro_sourced:
+            input_source = f"Bhuvan Scene ({isro_source or filename})"
+        elif bbox is not None or (latitude is not None and longitude is not None):
+            input_source = "Map Selection"
+        else:
+            input_source = "Manual Upload"
 
         # ----------------------------------------------------------------
         # Stage 2 — Ensure RemoteCLIP model is ready
@@ -411,6 +427,8 @@ class AnalysisService:
             reasoning_trace=reasoning_trace,
             professional_report=professional_report,
             warning=gpt_warning,
+            request_id=request_id,
+            input_source=input_source,
             vegetation_health_score=eo_result.vegetation_health_score,
             vegetation_index_type=index_type,
             deforestation_delta=deforestation_delta,

@@ -9,6 +9,8 @@ export interface LandCoverClass {
 
 export interface AnalysisResult {
   status: string;
+  request_id?: string;
+  input_source?: string;
   dominant_land_cover: string;
   secondary_land_cover?: string;
   confidence: string;

@@ -173,6 +173,29 @@ export const AnalysisResults = memo(({ result, askInsight, insightLoading }: Ana
 
       <div className="cb-report-card orionix-reveal orionix-in" style={{ padding: "10px", width: "100%", maxWidth: "1200px", margin: "0 auto" }}>
 
+        {/* Request Provenance Banner */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '8px 14px',
+          marginBottom: '14px',
+          borderRadius: '8px',
+          background: 'rgba(99, 102, 241, 0.08)',
+          border: '1px solid rgba(99, 102, 241, 0.2)',
+          fontFamily: "'Space Mono', monospace",
+          fontSize: '11px',
+          flexWrap: 'wrap',
+          gap: '8px'
+        }}>
+          <span style={{ color: '#a5b4fc' }}>
+            📋 Source: <strong style={{ color: '#ffffff' }}>{result.input_source || "Manual Upload"}</strong>
+          </span>
+          <span style={{ color: '#64748b' }}>
+            Request ID: <code style={{ color: '#818cf8' }}>{result.request_id || "demo-" + Date.now().toString(36)}</code>
+          </span>
+        </div>
+
         {/* Dynamic Risk Trajectory Timeline */}
         <RiskTimeline
           beforeRisk={beforeRisk}

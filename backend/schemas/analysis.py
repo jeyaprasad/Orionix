@@ -60,6 +60,14 @@ class AnalysisResponse(BaseModel):
         ...,
         description="Pipeline outcome: 'success' or 'partial_success' (GPT unavailable)."
     )
+    request_id: Optional[str] = Field(
+        None,
+        description="Unique request identifier for tracking and debugging."
+    )
+    input_source: Optional[str] = Field(
+        None,
+        description="Source of analysis input: 'Manual Upload', 'Map Selection', or 'Bhuvan Scene <id>'."
+    )
 
     # --- EO Classification ---
     dominant_land_cover: str = Field(

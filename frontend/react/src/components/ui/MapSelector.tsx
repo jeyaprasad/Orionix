@@ -119,6 +119,7 @@ export function MapSelector({ onConfirm, onCancel, waterMaskBase64, analyzedBbox
     urban_growth_classification: string;
   } | null>(null);
 
+  const [captureError, setCaptureError] = useState<string | null>(null);
   const [sliderPosition, setSliderPosition] = useState(50);
   const [isDragging, setIsDragging] = useState(false);
   const sliderContainerRef = useRef<HTMLDivElement>(null);
@@ -603,7 +604,8 @@ export function MapSelector({ onConfirm, onCancel, waterMaskBase64, analyzedBbox
       setIsComparing(true);
     } catch (err: any) {
       console.error(err);
-      alert(err.message || "Failed to process time-series comparison. Please try again.");
+      setCaptureError(err.message || "Failed to fetch imagery from Esri World Imagery export service. Check your network connection and try again.");
+      setTimeout(() => setCaptureError(null), 8000);
     } finally {
       setLoading(false);
     }
@@ -612,7 +614,31 @@ export function MapSelector({ onConfirm, onCancel, waterMaskBase64, analyzedBbox
   const isOverlayMode = !!(waterMaskBase64 && analyzedBbox);
 
   return (
-    <div className="flex flex-col md:flex-row w-full max-w-5xl h-[calc(100vh-120px)] min-h-[500px] bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl">
+    <div className="flex flex-col md:flex-row w-full max-w-5xl h-[calc(100vh-120px)] min-h-[500px] bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-2xl" style={{ position: 'relative' }}>
+      
+      {/* Error Toast */}
+      {captureError && (
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          zIndex: 9999,
+          background: '#7f1d1d',
+          border: '1px solid #ef4444',
+          color: '#fca5a5',
+          padding: '10px 20px',
+          borderRadius: '8px',
+          fontSize: '13px',
+          fontFamily: "'Space Mono', monospace",
+          maxWidth: '80%',
+          textAlign: 'center',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.5)',
+          animation: 'fadeIn 0.3s ease'
+        }}>
+          ⚠️ {captureError}
+        </div>
+      )}
       
       {/* LEFT CONTROL PANEL */}
       <div className="w-full md:w-[340px] flex-shrink-0 flex flex-col p-5 bg-slate-950 border-b md:border-b-0 md:border-r border-slate-800 overflow-y-auto">
