@@ -279,8 +279,8 @@ class HTMLRenderer:
     <style>
         @page {{
             size: A4;
-            margin: 1.2cm;
-            margin-bottom: 1.8cm;
+            margin: 1.5cm;
+            margin-bottom: 2.0cm;
         }}
         body {{
             font-family: Arial, Helvetica, sans-serif;
@@ -288,80 +288,113 @@ class HTMLRenderer:
             color: #f0edff;
             margin: 0;
             padding: 0;
-            font-size: 11px;
-            line-height: 1.4;
+            font-size: 14px;
+            line-height: 1.7;
         }}
         table {{
             border-collapse: collapse;
+            width: 100%;
         }}
         .logo-text {{
             font-family: Courier, monospace;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             color: #ffffff;
-            margin-bottom: 2px;
+            margin-bottom: 6px;
         }}
         h1 {{
-            font-size: 18px;
+            font-size: 26px;
             font-weight: bold;
             color: #ffffff;
-            margin: 0;
+            margin: 0 0 8px 0;
             padding: 0;
+            line-height: 1.2;
         }}
         h2 {{
-            font-size: 10px;
+            font-size: 13px;
             color: #00f0ff;
             font-family: Courier, monospace;
             font-weight: normal;
             text-transform: uppercase;
-            margin: 2px 0 0 0;
+            letter-spacing: 0.05em;
+            margin: 0 0 16px 0;
             padding: 0;
         }}
         .meta-text {{
             color: #a09cb4;
-            font-size: 9px;
+            font-size: 11px;
             font-family: Courier, monospace;
-            margin-top: 5px;
+            line-height: 1.5;
         }}
         .section-title {{
-            font-size: 10px;
+            font-size: 14px;
             font-weight: bold;
-            margin-top: 15px;
-            margin-bottom: 6px;
+            margin-top: 36px;
+            margin-bottom: 16px;
             text-transform: uppercase;
             color: #00f0ff;
             font-family: Courier, monospace;
             border-bottom: 1px solid #22223a;
-            padding-bottom: 2px;
+            padding-bottom: 6px;
+            letter-spacing: 0.05em;
         }}
         .summary-box {{
             background-color: #0c0c1e;
             border-left: 4px solid {risk_accent_color};
-            padding: 10px 14px;
-            margin-bottom: 12px;
+            padding: 20px 24px;
+            margin-bottom: 24px;
         }}
         .metrics-table {{
             width: 100%;
             border: 1px solid #22223a;
             background-color: #0c0c1e;
-            margin-bottom: 12px;
-        }}
-        .metrics-table th {{
-            background-color: #11112e;
-            color: #a09cb4;
-            font-family: Courier, monospace;
-            font-size: 8px;
-            font-weight: bold;
-            text-transform: uppercase;
-            padding: 5px 8px;
-            border: 1px solid #22223a;
+            margin-bottom: 24px;
         }}
         .metrics-table td {{
-            color: #ffffff;
-            font-size: 10px;
-            padding: 7px 8px;
-            text-align: center;
+            padding: 16px 20px;
             border: 1px solid #22223a;
+            vertical-align: top;
+        }}
+        .metric-label {{
+            color: #a09cb4;
+            font-family: Courier, monospace;
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }}
+        .metric-value {{
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: bold;
+        }}
+        
+        /* Mobile responsive overrides (ignored by xhtml2pdf) */
+        @media (max-width: 600px) {{
+            .metrics-table tr {{
+                display: flex;
+                flex-direction: column;
+            }}
+            .metrics-table td {{
+                display: block;
+                width: 100% !important;
+                box-sizing: border-box;
+            }}
+            .split-column {{
+                display: block !important;
+                width: 100% !important;
+                padding: 0 !important;
+                margin-bottom: 30px;
+            }}
+            .header-table, .header-table tr, .header-table td {{
+                display: block;
+                width: 100% !important;
+            }}
+            .header-image-cell {{
+                margin-top: 20px;
+                text-align: left !important;
+                padding-left: 0 !important;
+            }}
         }}
     </style>
 </head>
@@ -379,20 +412,20 @@ class HTMLRenderer:
     <div style="width: 100%;">
         
         <!-- HEADER PANEL -->
-        <table style="width: 100%; border-bottom: 1px solid #22223a; padding-bottom: 10px; margin-bottom: 15px;">
+        <table class="header-table" style="width: 100%; border-bottom: 1px solid #22223a; padding-bottom: 24px; margin-bottom: 24px;">
             <tr>
                 <td style="width: 72%; vertical-align: top;">
                     <div class="logo-text"><span style="color: #00f0ff;">●</span> Orionix</div>
                     <h1>Geospatial Intelligence Briefing</h1>
                     <h2>Remote Sensing Telemetry Analysis</h2>
                     <div class="meta-text">
-                        <div>Report ID: {report_id}</div>
-                        <div>Generated: {now_utc}</div>
-                        <div>Coordinates: {location_text}</div>
-                        {f"<div>Provenance: Sourced from ISRO portal ({analysis_dict.get('isro_source')})</div>" if analysis_dict.get('isro_sourced') else ""}
+                        <div><strong>Report ID:</strong> {report_id}</div>
+                        <div><strong>Generated:</strong> {now_utc}</div>
+                        <div><strong>Coordinates:</strong> {location_text}</div>
+                        {f"<div><strong>Provenance:</strong> Sourced from ISRO portal ({analysis_dict.get('isro_source')})</div>" if analysis_dict.get('isro_sourced') else ""}
                     </div>
                 </td>
-                {image_html}
+                {image_html.replace('td style="', 'td class="header-image-cell" style="')}
             </tr>
         </table>
 
@@ -402,46 +435,50 @@ class HTMLRenderer:
         <!-- EXECUTIVE SUMMARY -->
         <div class="section-title">Executive Summary</div>
         <div class="summary-box">
-            <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #d2cffd; text-align: justify;">
+            <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #d2cffd; text-align: justify;">
                 {exec_summary_text}
             </p>
         </div>
 
         <!-- KEY METRICS TABLE -->
         <table class="metrics-table">
-            <thead>
-                <tr>
-                    <th style="width: 25%;">Primary Classification</th>
-                    <th style="width: 25%;">Secondary Classification</th>
-                    <th style="width: 25%;">Confidence Assessment</th>
-                    <th style="width: 25%;">Assessed Risk Level</th>
-                </tr>
-            </thead>
             <tbody>
                 <tr>
-                    <td>{dominant_cover}</td>
-                    <td>{secondary_cover}</td>
-                    <td>{confidence}</td>
-                    <td style="color: {risk_accent_color}; font-weight: bold; background-color: {risk_bg_color};">{risk_level.upper()}</td>
+                    <td style="width: 25%;">
+                        <div class="metric-label">Primary Classification</div>
+                        <div class="metric-value">{dominant_cover}</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="metric-label">Secondary Classification</div>
+                        <div class="metric-value">{secondary_cover}</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="metric-label">Confidence</div>
+                        <div class="metric-value">{confidence}</div>
+                    </td>
+                    <td style="width: 25%;">
+                        <div class="metric-label">Assessed Risk Level</div>
+                        <div class="metric-value" style="color: {risk_accent_color};">{risk_level.upper()}</div>
+                    </td>
                 </tr>
             </tbody>
         </table>
 
         <!-- ENVIRONMENTAL INDICATORS -->
         <div class="section-title">Environmental Indicators</div>
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px; background-color: #0c0c1e; border: 1px solid #22223a;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 24px; background-color: #0c0c1e; border: 1px solid #22223a;">
             <thead>
                 <tr style="background-color: #11112e; border-bottom: 1px solid #22223a;">
-                    <th style="padding: 6px 12px; text-align: left; font-family: monospace; font-size: 8px; color: #a09cb4; width: 30%;">INDICATOR</th>
-                    <th style="padding: 6px 12px; text-align: left; font-family: monospace; font-size: 8px; color: #a09cb4; width: 50%;">TELEMETRY METRIC</th>
-                    <th style="padding: 6px 12px; text-align: right; font-family: monospace; font-size: 8px; color: #a09cb4; width: 20%;">VALUE</th>
+                    <th style="padding: 10px 16px; text-align: left; font-family: Courier, monospace; font-size: 10px; color: #a09cb4; width: 35%;">INDICATOR</th>
+                    <th style="padding: 10px 16px; text-align: left; font-family: Courier, monospace; font-size: 10px; color: #a09cb4; width: 45%;">TELEMETRY METRIC</th>
+                    <th style="padding: 10px 16px; text-align: right; font-family: Courier, monospace; font-size: 10px; color: #a09cb4; width: 20%; white-space: nowrap;">VALUE</th>
                 </tr>
             </thead>
             <tbody>
                 <!-- Row 1: Vegetation -->
                 <tr style="border-bottom: 1px solid #22223a;">
-                    <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Vegetation Health Proxy</td>
-                    <td style="padding: 8px 12px; vertical-align: middle;">
+                    <td style="padding: 18px 16px; font-size: 13px; color: #ffffff;">Vegetation Health Proxy</td>
+                    <td style="padding: 18px 16px; vertical-align: middle;">
                         <table style="width: 100%; border-collapse: collapse; height: 8px; background-color: #1a1a3a;">
                             <tr>
                                 <td style="width: {int(veg_score)}%; background-color: #39d353; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
@@ -449,12 +486,12 @@ class HTMLRenderer:
                             </tr>
                         </table>
                     </td>
-                    <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: #ffffff; font-weight: bold;">{veg_score:.1f}%</td>
+                    <td style="padding: 18px 16px; text-align: right; font-size: 13px; color: #ffffff; font-weight: bold; white-space: nowrap;">{veg_score:.1f}%</td>
                 </tr>
                 <!-- Row 2: Urban -->
                 <tr style="border-bottom: 1px solid #22223a;">
-                    <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Urban / Built-up Density</td>
-                    <td style="padding: 8px 12px; vertical-align: middle;">
+                    <td style="padding: 18px 16px; font-size: 13px; color: #ffffff;">Urban / Built-up Density</td>
+                    <td style="padding: 18px 16px; vertical-align: middle;">
                         <table style="width: 100%; border-collapse: collapse; height: 8px; background-color: #1a1a3a;">
                             <tr>
                                 <td style="width: {int(urb_score)}%; background-color: #ff9d00; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
@@ -462,12 +499,12 @@ class HTMLRenderer:
                             </tr>
                         </table>
                     </td>
-                    <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: #ffffff; font-weight: bold;">{urb_score:.1f}%</td>
+                    <td style="padding: 18px 16px; text-align: right; font-size: 13px; color: #ffffff; font-weight: bold; white-space: nowrap;">{urb_score:.1f}%</td>
                 </tr>
                 <!-- Row 3: Water -->
                 <tr style="border-bottom: 1px solid #22223a;">
-                    <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Surface Water Exposure</td>
-                    <td style="padding: 8px 12px; vertical-align: middle;">
+                    <td style="padding: 18px 16px; font-size: 13px; color: #ffffff;">Surface Water Exposure</td>
+                    <td style="padding: 18px 16px; vertical-align: middle;">
                         <table style="width: 100%; border-collapse: collapse; height: 8px; background-color: #1a1a3a;">
                             <tr>
                                 <td style="width: {int(water_score)}%; background-color: #0088ff; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
@@ -475,12 +512,12 @@ class HTMLRenderer:
                             </tr>
                         </table>
                     </td>
-                    <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: #ffffff; font-weight: bold;">{water_score:.1f}%</td>
+                    <td style="padding: 18px 16px; text-align: right; font-size: 13px; color: #ffffff; font-weight: bold; white-space: nowrap;">{water_score:.1f}%</td>
                 </tr>
                 <!-- Row 4: Combined Flood Risk -->
                 <tr>
-                    <td style="padding: 8px 12px; font-size: 10px; color: #ffffff;">Combined Flood Hazard Risk</td>
-                    <td style="padding: 8px 12px; vertical-align: middle;">
+                    <td style="padding: 18px 16px; font-size: 13px; color: #ffffff;">Combined Flood Hazard Risk</td>
+                    <td style="padding: 18px 16px; vertical-align: middle;">
                         <table style="width: 100%; border-collapse: collapse; height: 8px; background-color: #1a1a3a;">
                             <tr>
                                 <td style="width: {int(flood_score)}%; background-color: {risk_accent_color}; height: 8px; font-size: 0; line-height: 0; padding: 0;">&nbsp;</td>
@@ -488,7 +525,7 @@ class HTMLRenderer:
                             </tr>
                         </table>
                     </td>
-                    <td style="padding: 8px 12px; text-align: right; font-size: 10px; color: #ffffff; font-weight: bold;">{flood_score:.1f}%</td>
+                    <td style="padding: 18px 16px; text-align: right; font-size: 13px; color: #ffffff; font-weight: bold; white-space: nowrap;">{flood_score:.1f}%</td>
                 </tr>
             </tbody>
         </table>
@@ -497,17 +534,17 @@ class HTMLRenderer:
         {trend_html}
 
         <!-- FINDINGS & RECOMMENDATIONS -->
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 15px;">
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 30px;">
             <tr>
-                <td style="width: 48%; vertical-align: top; padding-right: 2%;">
-                    <div class="section-title">Key Findings</div>
-                    <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #a09cb4; text-align: justify;">
+                <td class="split-column" style="width: 48%; vertical-align: top; padding-right: 2%;">
+                    <div class="section-title" style="margin-top: 0;">Key Findings</div>
+                    <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #a09cb4; text-align: justify;">
                         {findings_prose}
                     </p>
                 </td>
-                <td style="width: 48%; vertical-align: top; padding-left: 2%;">
-                    <div class="section-title">AI Recommendations</div>
-                    <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #a09cb4; text-align: justify;">
+                <td class="split-column" style="width: 48%; vertical-align: top; padding-left: 2%;">
+                    <div class="section-title" style="margin-top: 0;">AI Recommendations</div>
+                    <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #a09cb4; text-align: justify;">
                         {recs_prose}
                     </p>
                 </td>
@@ -515,8 +552,8 @@ class HTMLRenderer:
         </table>
 
         <!-- CLOSING TAKEAWAY SUMMARY -->
-        <div style="border-top: 1px solid #22223a; padding-top: 10px; margin-top: 15px; margin-bottom: 20px;">
-            <p style="margin: 0; font-size: 11px; line-height: 1.5; color: #ffffff; font-weight: bold;">
+        <div style="border-top: 1px solid #22223a; padding-top: 24px; margin-top: 30px; margin-bottom: 30px;">
+            <p style="margin: 0; font-size: 14px; line-height: 1.7; color: #ffffff; font-weight: bold;">
                 {takeaway_sentence}
             </p>
         </div>
