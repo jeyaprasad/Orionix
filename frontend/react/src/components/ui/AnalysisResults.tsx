@@ -196,18 +196,8 @@ export const AnalysisResults = memo(({ result, askInsight, insightLoading }: Ana
           </span>
         </div>
 
-        {/* Dynamic Risk Trajectory Timeline */}
-        <RiskTimeline
-          beforeRisk={beforeRisk}
-          beforeValue={beforeValue}
-          beforeDate={beforeDate}
-          currentRisk={currentRisk}
-          currentValue={currentValue}
-          currentDate={currentDate}
-          forecastRisk={forecastRisk}
-          forecastValue={forecastValue}
-          forecastReason={forecastReason}
-        />
+        {/* Dynamic Risk Trajectory Timeline (Disabled until wired to full TimeSeries API in single-image mode) */}
+        {/* <RiskTimeline data={null} /> */}
 
         {result.flood_risk_label && (
           <div style={{ borderBottom: '1px solid #334155', paddingBottom: '14px', marginBottom: '14px' }}>

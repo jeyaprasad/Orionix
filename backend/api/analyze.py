@@ -383,3 +383,153 @@ async def compare_vegetation(
             detail="An unexpected error occurred during vegetation comparison.",
         )
 
+
+@router.post(
+    "/analyze/timeseries",
+    summary="Multi-image time-series environmental analysis",
+    description=(
+        "Upload 3-6 satellite images with associated ISO-8601 dates. "
+        "Runs vegetation, water, and urban detectors on each image in chronological order "
+        "and returns per-date metrics plus consecutive-point trend deltas."
+    ),
+)
+async def analyze_timeseries(
+    images: list[UploadFile] = File(...),
+    dates: list[str] = Form(...),
+):
+    """
+    POST /api/analyze/timeseries
+
+    Accepts multipart form with:
+      - images: 3-6 satellite image files
+      - dates: matching ISO date strings (YYYY-MM-DD), one per image
+
+    Returns an array of per-date metrics and computed deltas between consecutive points.
+    """
+    request_start = time.perf_counter()
+    logger.info(f"[/api/analyze/timeseries] Request received. {len(images)} images, {len(dates)} dates.")
+
+    if len(images) < 2 or len(images) > 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Expected 2-6 images, received {len(images)}.",
+        )
+    if len(images) != len(dates):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Number of images ({len(images)}) must match number of dates ({len(dates)}).",
+        )
+
+    # Parse and validate dates
+    from datetime import date as dt_date
+    parsed_dates = []
+    for d in dates:
+        try:
+            parsed_dates.append(dt_date.fromisoformat(d.strip()))
+        except ValueError:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Invalid date format: '{d}'. Expected YYYY-MM-DD.",
+            )
+
+    # Sort images by date
+    paired = list(zip(parsed_dates, images))
+    paired.sort(key=lambda x: x[0])
+
+    # Process each image
+    data_points = []
+    for idx, (img_date, img_file) in enumerate(paired):
+        try:
+            img_bytes = await img_file.read()
+            if not img_bytes:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail=f"Image #{idx+1} (date={img_date}) is empty.",
+                )
+
+            pil_image = validate_and_load_image(img_bytes, img_file.filename or f"ts_{idx}.jpg")
+
+            veg_score = compute_vegetation_index(pil_image)
+            water_pct, _ = detect_water_extent(pil_image)
+            urban_pct = compute_urban_density(pil_image)
+
+            data_points.append({
+                "date": img_date.isoformat(),
+                "filename": img_file.filename or f"image_{idx}.jpg",
+                "vegetation_index_score": round(veg_score, 2),
+                "water_coverage_percent": round(water_pct, 2),
+                "urban_density_percent": round(urban_pct, 2),
+            })
+
+            logger.info(
+                f"[/api/analyze/timeseries] Point {idx+1}/{len(paired)}: "
+                f"date={img_date}, veg={veg_score:.2f}, water={water_pct:.2f}%, urban={urban_pct:.2f}%"
+            )
+        except HTTPException:
+            raise
+        except ValueError as e:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Image #{idx+1} (date={img_date}) validation failed: {e}",
+            )
+        except Exception as e:
+            logger.error(f"[/api/analyze/timeseries] Error processing image #{idx+1}: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Failed to process image #{idx+1}.",
+            )
+
+    # Compute consecutive deltas
+    deltas = []
+    for i in range(1, len(data_points)):
+        prev = data_points[i - 1]
+        curr = data_points[i]
+        deltas.append({
+            "from_date": prev["date"],
+            "to_date": curr["date"],
+            "vegetation_delta": round(prev["vegetation_index_score"] - curr["vegetation_index_score"], 2),
+            "water_coverage_delta": round(curr["water_coverage_percent"] - prev["water_coverage_percent"], 2),
+            "urban_density_delta": round(curr["urban_density_percent"] - prev["urban_density_percent"], 2),
+        })
+
+    # Compute overall trend from first to last
+    first = data_points[0]
+    last = data_points[-1]
+    overall_veg_delta = round(first["vegetation_index_score"] - last["vegetation_index_score"], 2)
+    overall_water_delta = round(last["water_coverage_percent"] - first["water_coverage_percent"], 2)
+    overall_urban_delta = round(last["urban_density_percent"] - first["urban_density_percent"], 2)
+
+    # Classify overall trends
+    def classify_trend(delta, metric_type):
+        if metric_type == "vegetation":
+            if delta <= 2.0: return "Stable"
+            elif delta <= 10.0: return "Declining"
+            else: return "Critical Loss"
+        elif metric_type == "water":
+            if abs(delta) <= 3.0: return "Stable"
+            elif delta > 3.0: return "Rising"
+            else: return "Receding"
+        else:  # urban
+            if delta <= 2.0: return "Stable"
+            elif delta <= 8.0: return "Moderate Growth"
+            else: return "Rapid Expansion"
+
+    total_ms = (time.perf_counter() - request_start) * 1000
+    logger.info(f"[/api/analyze/timeseries] Completed {len(data_points)} points in {total_ms:.0f}ms.")
+
+    return {
+        "status": "success",
+        "point_count": len(data_points),
+        "data_points": data_points,
+        "consecutive_deltas": deltas,
+        "overall_summary": {
+            "date_range": f"{first['date']} → {last['date']}",
+            "vegetation_delta": overall_veg_delta,
+            "vegetation_trend": classify_trend(overall_veg_delta, "vegetation"),
+            "water_coverage_delta": overall_water_delta,
+            "water_trend": classify_trend(overall_water_delta, "water"),
+            "urban_density_delta": overall_urban_delta,
+            "urban_trend": classify_trend(overall_urban_delta, "urban"),
+        },
+        "processing_time_ms": round(total_ms, 1),
+    }

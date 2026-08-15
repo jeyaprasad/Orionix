@@ -5,6 +5,7 @@ import { ChatMessage, AnalysisResult } from "../../hooks/useAnalysis";
 import { PipelineVisualizer } from "./PipelineVisualizer";
 import { AnalysisResults } from "./AnalysisResults";
 import { MapSelector } from "./MapSelector";
+import { TimeSeriesUploader } from "./TimeSeriesUploader";
 
 interface ChatInterfaceProps {
   messages: ChatMessage[];
@@ -65,6 +66,7 @@ export const ChatInterface = memo(({
 }: ChatInterfaceProps) => {
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isBhuvanCatalogOpen, setIsBhuvanCatalogOpen] = useState(false);
+  const [isTimeSeriesOpen, setIsTimeSeriesOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -375,6 +377,16 @@ export const ChatInterface = memo(({
               <span style={{ fontSize: "1.1rem" }}>🛰️</span>
               <span className="cb-attach-text">Bhuvan</span>
             </button>
+            <button
+              className="cb-attach-btn"
+              onClick={() => setIsTimeSeriesOpen(true)}
+              title="Multi-Point Time-Series Analysis"
+              type="button"
+              style={{ borderLeft: 'none' }}
+            >
+              <span style={{ fontSize: "1.1rem" }}>📈</span>
+              <span className="cb-attach-text">Time-Series</span>
+            </button>
             <input
               id="file-upload"
               type="file"
@@ -561,6 +573,22 @@ export const ChatInterface = memo(({
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+      {isTimeSeriesOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
+          <div style={{ position: 'relative', width: '100%', maxWidth: '900px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <button
+              onClick={() => setIsTimeSeriesOpen(false)}
+              style={{
+                position: 'absolute', top: '16px', right: '16px',
+                background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff',
+                borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10
+              }}
+            >✕</button>
+            <TimeSeriesUploader />
           </div>
         </div>
       )}

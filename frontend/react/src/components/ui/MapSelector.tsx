@@ -1015,6 +1015,28 @@ export function MapSelector({ onConfirm, onCancel, waterMaskBase64, analyzedBbox
             )}
             <div className="flex-grow relative w-full h-full">
               <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
+              
+              {/* Esri Limitation Label */}
+              <div style={{
+                position: 'absolute',
+                top: '12px',
+                right: '12px',
+                zIndex: 10,
+                background: 'rgba(15, 23, 42, 0.85)',
+                border: '1px solid rgba(148, 163, 184, 0.2)',
+                backdropFilter: 'blur(4px)',
+                padding: '6px 10px',
+                borderRadius: '6px',
+                color: '#94a3b8',
+                fontSize: '11px',
+                fontFamily: "'Space Mono', monospace",
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                pointerEvents: 'none'
+              }}>
+                ℹ️ Reference basemap (composite imagery, not date-specific)
+              </div>
             </div>
           </>
         )}
