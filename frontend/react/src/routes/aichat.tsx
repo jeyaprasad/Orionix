@@ -36,7 +36,8 @@ function OrionixDemo() {
     setBbox,
     setMode,
     demoMode,
-    setDemoMode
+    setDemoMode,
+    ingestBhuvanScene
   } = useAnalysis();
 
   const [chatInput, setChatInput] = useState("");
@@ -164,6 +165,7 @@ function OrionixDemo() {
                 setCoordinates={setCoordinates}
                 bbox={bbox}
                 setBbox={setBbox}
+                ingestBhuvanScene={ingestBhuvanScene}
               />
             </>
           )}

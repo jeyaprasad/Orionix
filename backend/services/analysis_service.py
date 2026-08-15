@@ -239,7 +239,7 @@ class AnalysisService:
         # Stage 6 — GPT analysis (non-fatal)
         # ----------------------------------------------------------------
         logger.info("[analyze_image] Stage 6: Requesting GPT analysis.")
-        gpt_text, gpt_warning, llm_model_id = await self._safe_gpt_analysis(prompt_payload)
+        gpt_text, reasoning_trace, gpt_warning, llm_model_id = await self._safe_gpt_analysis(prompt_payload)
 
         if gpt_text:
             logger.info("[analyze_image] Stage 6: GPT analysis received.")
@@ -408,6 +408,7 @@ class AnalysisService:
             confidence=eo_result.relative_confidence,
             summary=eo_result.summary,
             gpt_analysis=gpt_text,
+            reasoning_trace=reasoning_trace,
             professional_report=professional_report,
             warning=gpt_warning,
             vegetation_health_score=eo_result.vegetation_health_score,
@@ -555,16 +556,16 @@ class AnalysisService:
             logger.info("RemoteCLIP model not yet loaded — bootstrapping now.")
             remoteclip_service.load_model()
 
-    async def _safe_gpt_analysis(self, prompt_payload) -> tuple[Optional[str], Optional[str], str]:
+    async def _safe_gpt_analysis(self, prompt_payload) -> tuple[Optional[str], Optional[str], Optional[str], str]:
         """
-        Calls GPTService and returns (gpt_text, warning, model_id).
+        Calls GPTService and returns (gpt_text, reasoning_trace, warning, model_id).
 
         GPT failure is non-fatal. If the call fails for any reason,
         gpt_text is None and a descriptive warning string is returned.
         The pipeline continues and returns a partial_success response.
 
         Returns:
-            Tuple of (gpt_text, warning_message, llm_model_id).
+            Tuple of (gpt_text, reasoning_trace, warning_message, llm_model_id).
         """
         from backend.llm.openrouter import OpenRouterClient
         llm_model_id = self.gpt_service.provider.model or "unknown"
@@ -575,12 +576,13 @@ class AnalysisService:
                 user_prompt=prompt_payload.user_prompt,
             )
             gpt_text = result.get("response", "").strip()
+            reasoning_trace = result.get("reasoning")
             llm_model_id = result.get("model", llm_model_id)
-            return gpt_text or None, None, llm_model_id
+            return gpt_text or None, reasoning_trace or None, None, llm_model_id
 
         except Exception as e:
             logger.warning(f"GPT analysis failed (non-fatal): {type(e).__name__}: {e}")
-            return None, "LLM analysis unavailable.", llm_model_id
+            return None, None, "LLM analysis unavailable.", llm_model_id
 
 
     # ------------------------------------------------------------------

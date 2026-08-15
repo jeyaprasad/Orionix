@@ -47,30 +47,36 @@ BHUVAN_CATALOG = [
     }
 ]
 
-class BhuvanService:
+class BhuvanSampleCatalog:
+    """
+    BhuvanSampleCatalog — a small set of real, manually-sourced ISRO Bhuvan/MOSDAC
+    reference scene metadata bundled for offline demo reliability.
+    
+    Live API access requires registered ISRO credentials not available in this environment.
+    All data is served locally from representative cache files.
+    """
+    
     def get_scenes(self, satellite: Optional[str] = None) -> List[Dict[str, Any]]:
         """
-        Query the active ISRO Bhuvan/VEDAS metadata API catalog.
+        Query the local representative metadata catalog.
         """
-        logger.info(f"[BhuvanConnector] Querying MOSDAC metadata catalog. Filter satellite={satellite}")
+        logger.info(f"[BhuvanSampleCatalog] Querying local reference catalog. Filter satellite={satellite}")
         if satellite:
             return [s for s in BHUVAN_CATALOG if s["satellite"].lower() == satellite.lower()]
         return BHUVAN_CATALOG
 
     async def ingest_scene(self, scene_id: str) -> Dict[str, Any]:
         """
-        Simulate standard HTTP/API stream download handshake from MOSDAC servers.
-        Fetches satellite band array, saves it to workspace temporary cache, and registers metadata.
+        Loads the representative sample band image from the local cache and returns its metadata.
         """
         scene = next((s for s in BHUVAN_CATALOG if s["id"] == scene_id), None)
         if not scene:
-            raise ValueError(f"Scene ID {scene_id} not found in ISRO Bhuvan metadata repository.")
+            raise ValueError(f"Scene ID {scene_id} not found in local representative catalog.")
 
-        logger.info(f"[BhuvanConnector] Contacting https://bhuvan.nrsc.gov.in/api/v1/download?scene={scene_id}")
-        logger.info(f"[BhuvanConnector] Secure handshake verified via ISRO-SIH Token.")
+        logger.info(f"[BhuvanSampleCatalog] Loading bundled reference scene {scene_id} (sourced from ISRO Bhuvan public viewer, {scene['date']}).")
         
-        # Simulate download latency
-        time.sleep(0.5)
+        # Simulate slight disk read latency
+        time.sleep(0.1)
 
         # Locate the local fallback image file
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -89,11 +95,11 @@ class BhuvanService:
         if os.path.exists(fallback_path):
             with open(fallback_path, "rb") as f:
                 img_bytes = f.read()
-            logger.info(f"[BhuvanConnector] Successfully ingested {len(img_bytes)} bytes from MOSDAC tile cache.")
+            logger.info(f"[BhuvanSampleCatalog] Successfully loaded {len(img_bytes)} bytes from representative tile cache.")
         else:
             # Create synthetic 1x1 black pixel fallback if no files found
             img_bytes = b'\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01\x08\x06\x00\x00\x00\x1f\x15c4\x00\x00\x00\rIDATx\x9cc\xfc\xcf\xc0\x00\x00\x03\x01\x01\x00\x18\xdd\x8d\xb0\x00\x00\x00\x00IEND\xaeB`\x82'
-            logger.warning("[BhuvanConnector] Ingestion cache empty. Generating simulated fallback array.")
+            logger.warning("[BhuvanSampleCatalog] Representative cache empty. Generating fallback array.")
 
         return {
             "scene_id": scene["id"],
@@ -109,4 +115,4 @@ class BhuvanService:
             "filename": f"{scene['id']}.jpg"
         }
 
-bhuvan_service = BhuvanService()
+bhuvan_service = BhuvanSampleCatalog()

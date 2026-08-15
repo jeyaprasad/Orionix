@@ -11,6 +11,7 @@ from backend.api.insights import router as insights_router
 from backend.api.report import router as report_router
 from backend.api.history import router as history_router
 from backend.api.bhuvan import router as bhuvan_router
+from backend.api.alerts import router as alerts_router
 from backend.db.database import engine, Base
 
 # Initialize SQLite database tables
@@ -38,6 +39,7 @@ app.include_router(insights_router)
 app.include_router(report_router)
 app.include_router(history_router)
 app.include_router(bhuvan_router)
+app.include_router(alerts_router)
 
 @app.on_event("startup")
 async def startup_event():

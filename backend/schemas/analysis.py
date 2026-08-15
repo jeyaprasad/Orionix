@@ -90,6 +90,10 @@ class AnalysisResponse(BaseModel):
         None,
         description="Present when status is 'partial_success'. Describes why GPT was skipped."
     )
+    reasoning_trace: Optional[str] = Field(
+        None,
+        description="Raw model reasoning trace/thinking logs captured when requesting completions."
+    )
     vegetation_health_score: Optional[float] = Field(
         None,
         description="Lightweight 0-100 vegetation health score proxy."

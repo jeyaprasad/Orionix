@@ -30,9 +30,9 @@ async def ingest_and_analyze(scene_id: str = Form(...)):
             longitude=ingested["longitude"]
         )
         
-        # Override response scene details to mark it as ISRO telemetry source
+        # Override response scene details to mark it as representative imagery sourced from Bhuvan
         result.vegetation_health_disclaimer = (
-            f"ISRO Bhuvan Ingested Telemetry ({ingested['satellite']} - {ingested['sensor']}). "
+            f"ISRO Bhuvan Representative Imagery ({ingested['satellite']} - {ingested['sensor']}). "
             f"Bands processed: {', '.join(ingested['bands_downloaded'])}."
         )
         return result

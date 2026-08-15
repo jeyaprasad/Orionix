@@ -35,10 +35,14 @@ class OpenRouterClient(BaseLLMProvider):
     async def _make_request(self, messages: list, max_tokens: int = 3000) -> Any:
         logger.info(f"Sending request to OpenRouter for model: {self.model} with max_tokens={max_tokens}")
         try:
+            # Harmony reasoning parameters can be requested via extra_body or parameters
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                max_tokens=max_tokens
+                max_tokens=max_tokens,
+                extra_body={
+                    "include_reasoning": True
+                }
             )
             return response
 
@@ -79,7 +83,23 @@ class OpenRouterClient(BaseLLMProvider):
 
         # Extract the necessary format
         try:
-            response_text = response.choices[0].message.content
+            message_obj = response.choices[0].message
+            response_text = message_obj.content
+            
+            # Extract reasoning trace if populated via OpenRouter's Harmony/DeepSeek formatting
+            reasoning_trace = None
+            if hasattr(message_obj, "reasoning") and message_obj.reasoning:
+                reasoning_trace = message_obj.reasoning
+            elif isinstance(message_obj, dict) and "reasoning" in message_obj:
+                reasoning_trace = message_obj["reasoning"]
+            elif hasattr(message_obj, "extra_fields") and isinstance(message_obj.extra_fields, dict) and "reasoning" in message_obj.extra_fields:
+                reasoning_trace = message_obj.extra_fields["reasoning"]
+            elif hasattr(response, "choices") and len(response.choices) > 0:
+                # OpenRouter sometimes places it directly in the message dict
+                raw_msg = getattr(response.choices[0], "message", {})
+                if hasattr(raw_msg, "model_extra") and isinstance(raw_msg.model_extra, dict):
+                    reasoning_trace = raw_msg.model_extra.get("reasoning") or raw_msg.model_extra.get("reasoning_content")
+
             usage = {}
             if response.usage:
                 usage = {
@@ -93,6 +113,7 @@ class OpenRouterClient(BaseLLMProvider):
 
             return {
                 "response": response_text,
+                "reasoning": reasoning_trace,
                 "usage": usage,
                 "model": model_used,
                 "provider": self.provider_name
@@ -100,3 +121,4 @@ class OpenRouterClient(BaseLLMProvider):
         except (AttributeError, IndexError) as e:
             logger.error("Unexpected API response format from OpenRouter.")
             raise ValueError("Unexpected API response format") from e
+

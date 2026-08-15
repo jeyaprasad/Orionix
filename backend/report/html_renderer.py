@@ -132,8 +132,10 @@ class HTMLRenderer:
         veg_score = analysis_dict.get('vegetation_health_score')
         if veg_score is None:
             for c in analysis_dict.get('classes', []):
-                if c.get('label') in ['Forest', 'Vegetation', 'Agriculture']:
-                    veg_score = c.get('pct')
+                c_label = c.get('label') if isinstance(c, dict) else getattr(c, 'label', None)
+                c_pct = c.get('pct') if isinstance(c, dict) else getattr(c, 'pct', 0.0)
+                if c_label in ['Forest', 'Vegetation', 'Agriculture']:
+                    veg_score = c_pct
                     break
         veg_score = float(veg_score or 0.0)
 
@@ -141,8 +143,10 @@ class HTMLRenderer:
         urb_score = analysis_dict.get('urban_density_percent')
         if urb_score is None:
             for c in analysis_dict.get('classes', []):
-                if c.get('label') in ['Residential', 'Industrial']:
-                    urb_score = c.get('pct')
+                c_label = c.get('label') if isinstance(c, dict) else getattr(c, 'label', None)
+                c_pct = c.get('pct') if isinstance(c, dict) else getattr(c, 'pct', 0.0)
+                if c_label in ['Residential', 'Industrial']:
+                    urb_score = c_pct
                     break
         urb_score = float(urb_score or 0.0)
 

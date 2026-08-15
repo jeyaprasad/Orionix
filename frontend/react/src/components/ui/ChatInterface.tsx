@@ -32,6 +32,7 @@ interface ChatInterfaceProps {
   setCoordinates: (val: { lat: number; lng: number } | null) => void;
   bbox: { minLat: number; minLng: number; maxLat: number; maxLng: number } | null;
   setBbox: (val: { minLat: number; minLng: number; maxLat: number; maxLng: number } | null) => void;
+  ingestBhuvanScene?: (sceneId: string) => Promise<void>;
 }
 
 export const ChatInterface = memo(({
@@ -59,9 +60,11 @@ export const ChatInterface = memo(({
   coordinates,
   setCoordinates,
   bbox,
-  setBbox
+  setBbox,
+  ingestBhuvanScene
 }: ChatInterfaceProps) => {
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isBhuvanCatalogOpen, setIsBhuvanCatalogOpen] = useState(false);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -96,6 +99,37 @@ export const ChatInterface = memo(({
           <div className="cb-hero-orb orb2"></div>
           <h2>Analyze Satellite Imagery</h2>
           <h1><span className="nebula-text">Earth Observation</span> Assistant</h1>
+
+          {/* Time-Series & Weather Correlation Demo Call-to-Action Banner */}
+          <button 
+            onClick={() => setIsMapOpen(true)}
+            style={{
+              width: '100%',
+              background: 'linear-gradient(135deg, rgba(0, 229, 200, 0.12), rgba(108, 71, 255, 0.12))',
+              border: '1px solid rgba(120, 100, 255, 0.3)',
+              borderRadius: '12px',
+              padding: '16px',
+              color: '#ffffff',
+              cursor: 'pointer',
+              marginBottom: '20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              fontFamily: 'inherit',
+              textAlign: 'left',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
+              transition: 'all 0.25s ease'
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.border = '1px solid rgba(0, 229, 200, 0.5)'; e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 229, 200, 0.18), rgba(108, 71, 255, 0.18))'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.border = '1px solid rgba(120, 100, 255, 0.3)'; e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 229, 200, 0.12), rgba(108, 71, 255, 0.12))'; }}
+          >
+            <div>
+              <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', color: '#00e5c8', fontWeight: 'bold' }}>⚡ Time-Series & Weather Correlation Demo</h4>
+              <p style={{ margin: 0, fontSize: '11px', color: '#a09cb4', lineHeight: '1.4' }}>Compare baseline vs current satellite scenes and correlate with live Open-Meteo rainfall</p>
+            </div>
+            <div style={{ fontSize: '18px', color: '#00e5c8', marginLeft: '12px' }}>➜</div>
+          </button>
+
           <div className="cb-suggestions">
             <button onClick={() => setChatInput("Identify bodies of water and calculate total area.")}>
               <div className="sg-icon">💧</div>
@@ -331,6 +365,16 @@ export const ChatInterface = memo(({
               <span style={{ fontSize: "1.1rem" }}>🗺️</span>
               <span className="cb-attach-text">Map</span>
             </button>
+            <button
+              className="cb-attach-btn"
+              onClick={() => setIsBhuvanCatalogOpen(true)}
+              title="Ingest from ISRO Bhuvan Catalog"
+              type="button"
+              style={{ borderLeft: 'none' }}
+            >
+              <span style={{ fontSize: "1.1rem" }}>🛰️</span>
+              <span className="cb-attach-text">Bhuvan</span>
+            </button>
             <input
               id="file-upload"
               type="file"
@@ -397,6 +441,127 @@ export const ChatInterface = memo(({
                 : null
             }
           />
+        </div>
+      )}
+
+      {isBhuvanCatalogOpen && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(3, 3, 10, 0.85)',
+            backdropFilter: 'blur(12px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
+          }}
+          onClick={() => setIsBhuvanCatalogOpen(false)}
+        >
+          <div 
+            style={{
+              background: '#0d0d24',
+              border: '1px solid rgba(120, 100, 255, 0.3)',
+              borderRadius: '16px',
+              maxWidth: '650px',
+              width: '100%',
+              padding: '28px',
+              position: 'relative',
+              boxShadow: '0 0 40px rgba(108, 71, 255, 0.25)',
+              fontFamily: "Space Grotesk, sans-serif"
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button 
+              onClick={() => setIsBhuvanCatalogOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                background: 'none',
+                border: 'none',
+                color: '#a09cb4',
+                fontSize: '20px',
+                cursor: 'pointer'
+              }}
+            >
+              ✕
+            </button>
+            <h2 style={{ margin: '0 0 6px 0', fontSize: '10px', color: '#00e5c8', fontFamily: 'monospace', textTransform: 'uppercase' }}>
+              ISRO Satellite Catalog Ingestion
+            </h2>
+            <h1 style={{ margin: '0 0 12px 0', fontSize: '20px', fontWeight: 'bold', color: '#ffffff' }}>
+              Select Bundled Bhuvan/MOSDAC Reference Scene
+            </h1>
+            <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#a09cb4', margin: '0 0 20px 0', textAlign: 'justify' }}>
+              This module is <strong>designed to plug directly into ISRO's live Bhuvan/MOSDAC Web Coverage Service (WCS) data feeds</strong>. 
+              Because live production access requires registered organization credentials not available in this environment, 
+              this demo runs on a curated catalog of manually-sourced reference scenes bundled locally for offline testing.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {[
+                {
+                  id: "isro-liss4-kerala-2023",
+                  title: "Kerala Backwaters Flood Inundation",
+                  sat: "ResourceSat-2 (LISS-IV)",
+                  desc: "True-color multispectral tile capturing active flood extents and waterlogging along the coastal backwaters of Alappuzha (Aug 2023).",
+                  badge: "Flood Monitoring",
+                  color: "#00e5c8"
+                },
+                {
+                  id: "isro-cartosat-blr-2024",
+                  title: "Whitefield Bengaluru Sprawl",
+                  sat: "Cartosat-2E (PAN/MX)",
+                  desc: "High-resolution pan-sharpened frame depicting rapid residential expansion and industrial zoning clusters (Mar 2024).",
+                  badge: "Urban Density",
+                  color: "#a78bfa"
+                },
+                {
+                  id: "isro-liss4-ghats-deforest",
+                  title: "Western Ghats Deforestation",
+                  sat: "ResourceSat-2 (LISS-IV)",
+                  desc: "Multispectral tile showing structural canopy loss and degradation within protected forest zones in Karnataka (May 2024).",
+                  badge: "Canopy Loss",
+                  color: "#fda4af"
+                }
+              ].map((scene) => (
+                <div 
+                  key={scene.id}
+                  onClick={() => {
+                    setIsBhuvanCatalogOpen(false);
+                    if (ingestBhuvanScene) ingestBhuvanScene(scene.id);
+                  }}
+                  style={{
+                    background: '#11112e',
+                    border: '1px solid rgba(120, 100, 255, 0.15)',
+                    borderRadius: '12px',
+                    padding: '14px 18px',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px'
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.border = '1px solid rgba(120, 100, 255, 0.4)'; e.currentTarget.style.background = '#16163b'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.border = '1px solid rgba(120, 100, 255, 0.15)'; e.currentTarget.style.background = '#11112e'; }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ margin: 0, fontSize: '14px', color: '#ffffff', fontWeight: 'bold' }}>{scene.title}</h3>
+                    <span style={{ fontSize: '10px', background: 'rgba(120, 100, 255, 0.15)', color: scene.color, padding: '2px 8px', borderRadius: '10px', border: `1px solid ${scene.color}33` }}>
+                      {scene.badge}
+                    </span>
+                  </div>
+                  <p style={{ margin: 0, fontSize: '11px', color: '#8b8ba8', lineHeight: '1.4' }}>{scene.desc}</p>
+                  <div style={{ display: 'flex', gap: '12px', fontSize: '10px', color: '#64748b', fontFamily: 'monospace', marginTop: '2px' }}>
+                    <span>ID: {scene.id}</span>
+                    <span>SATELLITE: {scene.sat}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -55,6 +55,9 @@ export interface AnalysisResult {
   vegetation_trend?: string;
   urban_trend?: string;
   water_trend?: string;
+  vegetation_health_score?: number;
+  vegetation_health_disclaimer?: string;
+  reasoning_trace?: string;
 }
 
 export interface ChatMessage {
@@ -96,6 +99,13 @@ const MOCK_DEMO_RESULT: AnalysisResult = {
     "**3. Strategic Recommendations**\n" +
     "- Implement quarterly imagery passes to track canopy density changes.\n" +
     "- Correlate local rainfall gauges with reservoir level anomalies."
+  ),
+  reasoning_trace: (
+    "Thinking Process:\n" +
+    "1. Analyzed input bands (Red, Green, NIR proxy). Detected dominant response in the 0.42 NDVI range, signifying healthy green canopy.\n" +
+    "2. OpenCV HSV boundary extraction mapped contiguous pixels matching water signatures at 22.8% coverage in the lower south-east quadrant.\n" +
+    "3. Bounded coordinates (13.0827, 80.2707) mapped to coastal plain topology. Cross-checked active GDACS warnings: none active.\n" +
+    "4. Formulating strategic advisory: prioritize vegetation stabilization and monitor seasonal water expansion trends."
   ),
   classes: [
     { label: "Forest", pct: 64.3, color: "#39d353" },
@@ -498,6 +508,108 @@ export function useAnalysis() {
     }
   }, [result, insightLoading]);
 
+  const ingestBhuvanScene = useCallback(async (sceneId: string) => {
+    setStatus("running");
+    setResult(null);
+    setError(null);
+    setStageIndex(0);
+    timers.current.forEach(clearTimeout);
+    timers.current = [];
+
+    [1, 2, 3].forEach((i) => {
+      const t = setTimeout(() => setStageIndex(i), i * 350);
+      timers.current.push(t);
+    });
+    const minDuration = new Promise((resolve) => {
+      const t = setTimeout(resolve, PIPELINE_STAGES.length * 350);
+      timers.current.push(t);
+    });
+
+    if (demoMode) {
+      await minDuration;
+      let simulatedData = { ...MOCK_DEMO_RESULT };
+      if (sceneId === "isro-liss4-ghats-deforest") {
+        simulatedData = {
+          ...simulatedData,
+          dominant_land_cover: "Forest",
+          secondary_land_cover: "Barren",
+          summary: "ResourceSat-2 LISS-IV telemetry indicates active canopy degradation and loss in Western Ghats margins.",
+          risk_level: "Medium",
+          vegetation_health_score: 41.5,
+          vegetation_health_disclaimer: "ISRO Bhuvan Representative Imagery (ResourceSat-2 - LISS-IV). Bands processed: Red, Green, NIR."
+        };
+      } else if (sceneId === "isro-liss4-kerala-2023") {
+        simulatedData = {
+          ...simulatedData,
+          dominant_land_cover: "Water",
+          secondary_land_cover: "Residential",
+          summary: "LISS-IV tile shows heavy water coverage overlapping Alappuzha, Kerala residential bounds.",
+          risk_level: "High",
+          water_coverage_percent: 34.0,
+          flood_risk_score: 72.0,
+          flood_risk_label: "High",
+          flood_risk_reasoning: "Elevated risk: 45mm rainfall in the last 3 days combined with existing water coverage of 34.0%.",
+          vegetation_health_disclaimer: "ISRO Bhuvan Representative Imagery (ResourceSat-2 - LISS-IV). Bands processed: Red, Green, NIR."
+        };
+      } else {
+        simulatedData = {
+          ...simulatedData,
+          dominant_land_cover: "Residential",
+          secondary_land_cover: "Industrial",
+          summary: "Cartosat-2E frame depicting Whitefield, Bengaluru residential and industrial clusters.",
+          risk_level: "Low",
+          urban_density_delta: 0.0,
+          vegetation_health_disclaimer: "ISRO Bhuvan Representative Imagery (Cartosat-2E - PAN/MX). Bands processed: Panchromatic, R, G, B."
+        };
+      }
+      setResult(simulatedData);
+      setStatus("done");
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: simulatedData.professional_report || simulatedData.gpt_analysis || simulatedData.insight, isReport: true }
+      ]);
+      return;
+    }
+
+    try {
+      const controller = new AbortController();
+      setAbortController(controller);
+      const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+      const fData = new FormData();
+      fData.append("scene_id", sceneId);
+
+      const fetchIngestion = fetch(`${API_BASE}/api/bhuvan/ingest`, {
+        method: "POST",
+        body: fData,
+        signal: controller.signal
+      }).then(async (res) => {
+        clearTimeout(timeoutId);
+        if (!res.ok) {
+          throw new Error(`Bhuvan Ingestion failed: ${res.statusText}`);
+        }
+        return (await res.json()) as AnalysisResult;
+      });
+
+      const [data] = await Promise.all([fetchIngestion, minDuration]);
+      setResult(data);
+      setStatus("done");
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: data.professional_report || data.gpt_analysis || data.insight, isReport: true }
+      ]);
+    } catch (err: any) {
+      setStatus("idle");
+      setStageIndex(-1);
+      const msg = err.message || "Bhuvan Ingestion failed.";
+      setError(msg);
+      setMessages((prev) => [
+        ...prev,
+        { role: "assistant", text: `⚠️ Ingestion Error: ${msg}` }
+      ]);
+    }
+  }, [demoMode]);
+
   const abortRequest = useCallback(() => {
     if (abortController) {
       abortController.abort();
@@ -534,6 +646,7 @@ export function useAnalysis() {
     askInsight,
     abortRequest,
     demoMode,
-    setDemoMode
+    setDemoMode,
+    ingestBhuvanScene
   };
 }
