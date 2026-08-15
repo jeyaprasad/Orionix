@@ -28,11 +28,19 @@ const landCoverTypes = [
   { name: "Flood", color: "#0ea5e9" },
 ];
 
-const tech = [
+const techCurrent = [
   { label: "Vision", title: "RemoteCLIP ViT-L-14", tags: ["OpenCLIP", "PyTorch", "Pillow"], aurora: false },
+  { label: "Image Processing", title: "Spatial Preprocessing", tags: ["OpenCV"], aurora: false },
   { label: "Backend", title: "API & Server", tags: ["FastAPI", "Pydantic v2", "Uvicorn"], aurora: false },
   { label: "LLM", title: "OpenRouter", tags: ["Provider-abstracted", "Swappable Local Model"], aurora: true },
   { label: "Frontend", title: "Interactive UI", tags: ["React 18", "Vite", "TanStack Router"], aurora: false },
+];
+
+const techPlanned = [
+  { label: "Geospatial Ingestion", title: "Rasterio & GDAL", tags: ["TIFF loader", "Band extraction"], aurora: false },
+  { label: "Database Layer", title: "PostgreSQL", tags: ["Relational storage", "SQLAlchemy"], aurora: false },
+  { label: "Scientific Plotting", title: "Matplotlib & Plotly", tags: ["NDVI distributions", "Scatter metrics"], aurora: false },
+  { label: "Secondary Framework", title: "Flask Integration", tags: ["Legacy route support"], aurora: false },
 ];
 
 const marquee = ["PyTorch", "RemoteCLIP", "OpenRouter", "FastAPI", "React", "Zero-Shot", "Earth Observation", "ISRO EO", "Vite", "Pydantic"];
@@ -314,18 +322,43 @@ function OrionixLanding() {
             <div className="section-eyebrow">Under The Hood</div>
             <h2>Technologies Used</h2>
           </div>
-          <div className="tech-grid">
-            {tech.map((t, i) => (
-              <div key={t.label} className="tech-card orionix-spot orionix-reveal" style={{ transitionDelay: `${i * 60}ms` }}>
-                <div className="tech-label">{t.label}</div>
-                <div className="tech-title">{t.title}</div>
-                <div className="tech-tags">
-                  {t.tags.map((tag) => (
-                    <div key={tag} className={`tag ${t.aurora ? "aurora" : ""}`}>{tag}</div>
-                  ))}
+          
+          <div style={{ marginBottom: "50px" }}>
+            <h3 style={{ fontSize: "1rem", color: "var(--aurora)", fontFamily: "Space Mono, monospace", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "8px" }}>●</span> CURRENT STACK (IMPLEMENTED)
+            </h3>
+            <div className="tech-grid">
+              {techCurrent.map((t, i) => (
+                <div key={t.label} className="tech-card orionix-spot orionix-reveal" style={{ transitionDelay: `${i * 60}ms` }}>
+                  <div className="tech-label">{t.label}</div>
+                  <div className="tech-title">{t.title}</div>
+                  <div className="tech-tags">
+                    {t.tags.map((tag) => (
+                      <div key={tag} className={`tag ${t.aurora ? "aurora" : ""}`}>{tag}</div>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 style={{ fontSize: "1rem", color: "var(--nebula)", fontFamily: "Space Mono, monospace", marginBottom: "20px", display: "flex", alignItems: "center", gap: "10px" }}>
+              <span style={{ fontSize: "8px" }}>✦</span> PLANNED ROADMAP (PHASE 2)
+            </h3>
+            <div className="tech-grid">
+              {techPlanned.map((t, i) => (
+                <div key={t.label} className="tech-card orionix-spot orionix-reveal" style={{ transitionDelay: `${i * 60}ms` }}>
+                  <div className="tech-label">{t.label}</div>
+                  <div className="tech-title">{t.title}</div>
+                  <div className="tech-tags">
+                    {t.tags.map((tag) => (
+                      <div key={tag} className={`tag ${t.aurora ? "aurora" : ""}`}>{tag}</div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>

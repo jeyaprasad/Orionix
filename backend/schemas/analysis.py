@@ -23,6 +23,8 @@ class AnalysisMetadata(BaseModel):
     latitude: Optional[float] = Field(None, description="Captured latitude coordinate.")
     longitude: Optional[float] = Field(None, description="Captured longitude coordinate.")
     bbox: Optional[List[float]] = Field(None, description="Captured bounding box bounds.")
+    isro_sourced: bool = Field(default=False, description="True if the image was sourced from ISRO Bhuvan/VEDAS.")
+    isro_source: Optional[str] = Field(default=None, description="Details of the ISRO source dataset.")
 
 
 class LandCoverClass(BaseModel):
@@ -206,6 +208,7 @@ class VegetationComparisonResponse(BaseModel):
     # Extended metrics
     vegetation_delta: float = Field(..., description="Percentage-point drop in vegetation (baseline - current).")
     urban_density_delta: float = Field(..., description="Percentage-point change in urban density (current - baseline).")
+    water_coverage_delta: float = Field(default=0.0, description="Percentage-point change in water coverage (current - baseline).")
     deforestation_classification: str = Field(..., description="Deforestation classification: stable/declining/critical")
     urban_growth_classification: str = Field(..., description="Urban growth classification: stable/moderate/rapid")
 

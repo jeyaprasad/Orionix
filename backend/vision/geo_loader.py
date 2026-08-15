@@ -33,6 +33,44 @@ def load_geotiff(file_bytes: bytes, filename: str) -> dict:
     try:
         with MemoryFile(file_bytes) as memfile:
             with memfile.open() as src:
+                # Check for ISRO Bhuvan/VEDAS source
+                is_isro = False
+                isro_source = None
+                
+                filename_lower = filename.lower()
+                isro_keywords = {
+                    "bhuvan": "ISRO Bhuvan Portal",
+                    "vedas": "ISRO VEDAS Portal",
+                    "liss3": "ISRO Resourcesat LISS-3",
+                    "liss4": "ISRO Resourcesat LISS-4",
+                    "awifs": "ISRO Resourcesat AWiFS",
+                    "cartosat": "ISRO Cartosat",
+                    "oceansat": "ISRO Oceansat",
+                    "insat": "ISRO INSAT",
+                    "irs": "ISRO Indian Remote Sensing (IRS)"
+                }
+                for kw, label in isro_keywords.items():
+                    if kw in filename_lower:
+                        is_isro = True
+                        isro_source = label
+                        break
+                
+                if not is_isro:
+                    try:
+                        all_tags = src.tags()
+                        tags_str = str(all_tags).lower()
+                        if any(kw in tags_str for kw in ["isro", "bhuvan", "vedas", "nrsc", "sac"]):
+                            is_isro = True
+                            isro_source = "ISRO Bhuvan/VEDAS Portal"
+                        else:
+                            satellite = all_tags.get("SATELLITE", all_tags.get("satellite", "")).upper()
+                            sensor = all_tags.get("SENSOR", all_tags.get("sensor", "")).upper()
+                            if any(s in satellite for s in ["RESOURCESAT", "CARTOSAT", "RISAT", "OCEANSAT", "INSAT", "IRS"]):
+                                is_isro = True
+                                isro_source = f"ISRO {satellite}" + (f" ({sensor})" if sensor else "")
+                    except Exception as e:
+                        logger.warning(f"[load_geotiff] Error checking tags: {e}")
+
                 count = src.count
                 if count == 0:
                     raise ValueError("GeoTIFF dataset contains no bands.")
@@ -100,9 +138,15 @@ def load_geotiff(file_bytes: bytes, filename: str) -> dict:
                 if src.descriptions:
                     for idx, desc in enumerate(src.descriptions, start=1):
                         desc_str = str(desc or "").lower()
-                        if any(k in desc_str for k in ["red", "r", "b4", "band 4", "band4"]):
+                        # Tokenize to avoid matching single-character substrings like 'r' or 'n' inside other words
+                        desc_words = desc_str.replace("(", " ").replace(")", " ").replace("-", " ").split()
+                        
+                        is_red = any(k == desc_str or k in desc_words for k in ["red", "r", "b4", "band 4", "band4"])
+                        is_nir = any(k == desc_str or k in desc_words for k in ["nir", "near-infrared", "near infrared", "n", "b8", "band 8", "band8", "b5", "band 5", "band5"])
+                        
+                        if is_red:
                             red_idx = idx
-                        elif any(k in desc_str for k in ["nir", "near-infrared", "near infrared", "n", "b8", "band 8", "band8", "b5", "band 5", "band5"]):
+                        elif is_nir:
                             nir_idx = idx
 
                 # Fallback to standard index conventions if tags are missing
@@ -155,7 +199,9 @@ def load_geotiff(file_bytes: bytes, filename: str) -> dict:
                     "pil_image": pil_image,
                     "true_ndvi": true_ndvi,
                     "geo_metadata": geo_metadata,
-                    "index_type": index_type
+                    "index_type": index_type,
+                    "isro_sourced": is_isro,
+                    "isro_source": isro_source
                 }
 
     except Exception as e:

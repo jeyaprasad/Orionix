@@ -3,6 +3,8 @@ analysis_service.py
 -------------------
 Orchestration service for the Orionix Earth Observation Analysis pipeline.
 
+GPT-OSS is a text-only reasoning model with no native vision. Orionix bridges this gap by running RemoteCLIP as a vision front-end, converting its zero-shot classification and computed metrics (water/vegetation/urban indices) into structured text via prompt_builder.py, then passing that structured context to GPT-OSS for natural-language reasoning and insight generation — effectively giving GPT-OSS multimodal vision capability without retraining or fine-tuning it.
+
 Coordinates the complete flow:
   1. Image loading and validation        — image_loader
   2. RemoteCLIP inference                — vision.inference
@@ -107,12 +109,17 @@ class AnalysisService:
         # Stage 1 — Image loading and validation
         # ----------------------------------------------------------------
         logger.info("[analyze_image] Stage 1: Loading and validating image.")
+        isro_sourced = False
+        isro_source = None
+
         geotiff_data = load_geotiff(image_bytes, filename)
         if geotiff_data:
             pil_image = geotiff_data["pil_image"]
             true_ndvi = geotiff_data["true_ndvi"]
             geo_metadata = geotiff_data["geo_metadata"]
             index_type = geotiff_data["index_type"]
+            isro_sourced = geotiff_data.get("isro_sourced", False)
+            isro_source = geotiff_data.get("isro_source")
             
             # Resolve coordinates from WGS84 GeoTIFF metadata if not provided by caller
             crs_str = geo_metadata.get("crs", "").lower()
@@ -130,6 +137,12 @@ class AnalysisService:
             true_ndvi = None
             geo_metadata = None
             index_type = "RGB proxy index"
+
+        if isro_sourced:
+            logger.info(f"[analyze_image] SOURCED FROM ISRO BHUVAN/VEDAS: {isro_source}")
+        else:
+            logger.info("[analyze_image] SOURCED FROM GENERIC UPLOAD")
+
         logger.info("[analyze_image] Stage 1: Image loaded successfully.")
 
         # ----------------------------------------------------------------
@@ -423,6 +436,8 @@ class AnalysisService:
                 latitude=latitude,
                 longitude=longitude,
                 bbox=bbox,
+                isro_sourced=isro_sourced,
+                isro_source=isro_source,
             ),
         )
 

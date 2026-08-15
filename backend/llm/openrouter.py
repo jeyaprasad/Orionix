@@ -6,6 +6,8 @@ from backend.utils.logger import logger
 from backend.llm.base import BaseLLMProvider
 
 
+# Note: GPT-OSS has no native vision capabilities. This system (Orionix) exists
+# specifically to give it that capability via the RemoteCLIP bridge.
 class OpenRouterClient(BaseLLMProvider):
     def __init__(self):
         self.api_key = settings.OPENROUTER_API_KEY

@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    environment:
+      - MODEL_NAME=google/gemini-2.5-flash
+      - OPENROUTER_API_KEY=${OPENROUTER_API_KEY}
+    volumes:
+      - ./data:/app/data
+      - ./models:/app/models
+
+  frontend:
+    build:
+      context: ./frontend/react
+      dockerfile: Dockerfile
+    ports:
+      - "8080:80"
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8000
+    depends_on:
+      - backend

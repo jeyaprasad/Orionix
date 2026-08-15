@@ -314,9 +314,14 @@ async def compare_vegetation(
         baseline_urban_score = compute_urban_density(baseline_pil)
         current_urban_score = compute_urban_density(current_pil)
 
+        # Compute Water Coverage on both
+        baseline_water_pct, _ = detect_water_extent(baseline_pil)
+        current_water_pct, _ = detect_water_extent(current_pil)
+
         # 5. Compute deltas
         veg_delta = baseline_veg_score - current_veg_score
         urb_delta = current_urban_score - baseline_urban_score
+        water_delta = current_water_pct - baseline_water_pct
 
         # 6. Classify
         # Deforestation Classification
@@ -338,7 +343,7 @@ async def compare_vegetation(
         total_ms = (time.perf_counter() - request_start) * 1000
         logger.info(
             f"[/api/analyze/compare] Completed in {total_ms:.0f}ms. "
-            f"VegDelta={veg_delta:.2f}%, UrbanDelta={urb_delta:.2f}%, "
+            f"VegDelta={veg_delta:.2f}%, UrbanDelta={urb_delta:.2f}%, WaterDelta={water_delta:.2f}%, "
             f"DeforestClass='{deforest_class}', UrbanClass='{urban_growth_class}'."
         )
 
@@ -349,6 +354,7 @@ async def compare_vegetation(
             classification=deforest_class,
             vegetation_delta=round(veg_delta, 2),
             urban_density_delta=round(urb_delta, 2),
+            water_coverage_delta=round(water_delta, 2),
             deforestation_classification=deforest_class,
             urban_growth_classification=urban_growth_class,
         )

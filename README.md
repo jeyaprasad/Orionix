@@ -17,7 +17,7 @@ Orionix is a multimodal AI assistant capable of analyzing Earth Observation sate
    ```bash
    pip install -r backend/requirements.txt
    ```
-5. Copy `.env.example` to `.env` and fill in your keys. **You must explicitly define a `MODEL_NAME`** as there are no hardcoded default models. Optionally set `OPENROUTER_BASE_URL` to override the default OpenRouter endpoint (`https://openrouter.ai/api/v1`).
+5. Copy `.env.example` to `.env` and fill in your keys. By default, `MODEL_NAME` is set to `"openai/gpt-oss-20b"` (which is fast, free-tier friendly on OpenRouter, and ideal for live demos). For higher-quality offline report generation, you can configure `"openai/gpt-oss-120b"` as a fallback. Please note that Orionix's reasoning layer is built to run specifically on OpenAI's open-weight GPT-OSS model, not a generic swappable LLM. Optionally set `OPENROUTER_BASE_URL` to override the default OpenRouter endpoint (`https://openrouter.ai/api/v1`).
 6. Run the backend:
    ```bash
    python -m uvicorn backend.main:app --reload --port 8000
