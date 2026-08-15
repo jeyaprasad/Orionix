@@ -19,7 +19,7 @@ interface ChatInterfaceProps {
   setMode: (val: "auto" | "flood" | "deforestation" | "urban" | "agriculture") => void;
   chatInput: string;
   setChatInput: (val: string) => void;
-  handleSubmit: () => void;
+  runAnalysis: (prompt: string, source?: string) => void;
   handleFile: (f: File | null) => void;
   handleSecondFile: (f: File | null) => void;
   isStreaming: boolean;
@@ -32,7 +32,7 @@ interface ChatInterfaceProps {
   setCoordinates: (val: { lat: number; lng: number } | null) => void;
   bbox: { minLat: number; minLng: number; maxLat: number; maxLng: number } | null;
   setBbox: (val: { minLat: number; minLng: number; maxLat: number; maxLng: number } | null) => void;
-  ingestBhuvanScene?: (sceneId: string) => Promise<void>;
+  ingestBhuvanScene?: (sceneId: string, source: string) => Promise<void>;
 }
 
 export const ChatInterface = memo(({
@@ -48,7 +48,7 @@ export const ChatInterface = memo(({
   setMode,
   chatInput,
   setChatInput,
-  handleSubmit,
+  runAnalysis,
   handleFile,
   handleSecondFile,
   isStreaming,
@@ -63,8 +63,8 @@ export const ChatInterface = memo(({
   setBbox,
   ingestBhuvanScene
 }: ChatInterfaceProps) => {
-  const [isMapOpen, setIsMapOpen] = useState(false);
-  const [isBhuvanCatalogOpen, setIsBhuvanCatalogOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"upload" | "map" | "bhuvan">("upload");
+  const [selectedBhuvanScene, setSelectedBhuvanScene] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -75,10 +75,32 @@ export const ChatInterface = memo(({
     navigator.clipboard.writeText(text);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
+  const handleTabChange = (tab: "upload" | "map" | "bhuvan") => {
+    if (tab !== activeTab) {
+      handleResetChat();
+      setActiveTab(tab);
+      setSelectedBhuvanScene(null);
+    }
+  };
+
+  const handleUnifiedAnalyze = () => {
+    const prompt = chatInput.trim() || "Analyze this scene.";
+    
+    if (activeTab === "upload") {
+      runAnalysis(prompt, "Upload Image");
+      setChatInput("");
+    } else if (activeTab === "map") {
+      let source = "Map Selection";
+      if (coordinates) {
+        source += ` — ${coordinates.lat.toFixed(2)}°N, ${coordinates.lng.toFixed(2)}°E`;
+      }
+      runAnalysis(prompt, source);
+      setChatInput("");
+    } else if (activeTab === "bhuvan") {
+      if (selectedBhuvanScene && ingestBhuvanScene) {
+        ingestBhuvanScene(selectedBhuvanScene, `ISRO Bhuvan Sample — ${selectedBhuvanScene}`);
+        setChatInput("");
+      }
     }
   };
 
@@ -93,307 +115,357 @@ export const ChatInterface = memo(({
         <span className="cb-arch-step reasoning">🧠 Reasoning: GPT-OSS</span>
       </div>
 
-      {messages.length === 0 && status === "idle" && !showHistory ? (
-        <div className="cb-welcome orionix-reveal orionix-in">
-          <div className="cb-hero-orb orb1"></div>
-          <div className="cb-hero-orb orb2"></div>
-          <h2>Analyze Satellite Imagery</h2>
-          <h1><span className="nebula-text">Earth Observation</span> Assistant</h1>
-
-          {/* Time-Series & Weather Correlation Demo Call-to-Action Banner */}
-          <button 
-            onClick={() => setIsMapOpen(true)}
-            style={{
-              width: '100%',
-              background: 'linear-gradient(135deg, rgba(0, 229, 200, 0.12), rgba(108, 71, 255, 0.12))',
-              border: '1px solid rgba(120, 100, 255, 0.3)',
-              borderRadius: '12px',
-              padding: '16px',
-              color: '#ffffff',
-              cursor: 'pointer',
-              marginBottom: '20px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              fontFamily: 'inherit',
-              textAlign: 'left',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)',
-              transition: 'all 0.25s ease'
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.border = '1px solid rgba(0, 229, 200, 0.5)'; e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 229, 200, 0.18), rgba(108, 71, 255, 0.18))'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.border = '1px solid rgba(120, 100, 255, 0.3)'; e.currentTarget.style.background = 'linear-gradient(135deg, rgba(0, 229, 200, 0.12), rgba(108, 71, 255, 0.12))'; }}
-          >
-            <div>
-              <h4 style={{ margin: '0 0 4px 0', fontSize: '13px', color: '#00e5c8', fontWeight: 'bold' }}>⚡ Time-Series & Weather Correlation Demo</h4>
-              <p style={{ margin: 0, fontSize: '11px', color: '#a09cb4', lineHeight: '1.4' }}>Compare baseline vs current satellite scenes and correlate with live Open-Meteo rainfall</p>
-            </div>
-            <div style={{ fontSize: '18px', color: '#00e5c8', marginLeft: '12px' }}>➜</div>
-          </button>
-
-          <div className="cb-suggestions">
-            <button onClick={() => setChatInput("Identify bodies of water and calculate total area.")}>
-              <div className="sg-icon">💧</div>
-              <div className="sg-text">
-                <h4>Water Detection</h4>
-                <p>Map lakes and rivers</p>
-              </div>
-            </button>
-            <button onClick={() => setChatInput("Detect urban encroachment into forest regions.")}>
-              <div className="sg-icon">🏙️</div>
-              <div className="sg-text">
-                <h4>Urban Sprawl</h4>
-                <p>Track city expansion</p>
-              </div>
-            </button>
-            <button onClick={() => setChatInput("Assess vegetation health and calculate NDVI.")}>
-              <div className="sg-icon">🌿</div>
-              <div className="sg-text">
-                <h4>Agriculture</h4>
-                <p>Analyze crop vitality</p>
-              </div>
-            </button>
-            <button onClick={() => setChatInput("Analyze road networks, buildings, and industrial infrastructure in the scene.")}>
-              <div className="sg-icon">🏗️</div>
-              <div className="sg-text">
-                <h4>Infrastructure</h4>
-                <p>Map built-up zones</p>
-              </div>
-            </button>
-            <button onClick={() => setChatInput("Assess possible geological, flooding, or environmental hazards in the area.")}>
-              <div className="sg-icon">⚠️</div>
-              <div className="sg-text">
-                <h4>Risk Assessment</h4>
-                <p>Identify hazards</p>
-              </div>
-            </button>
-          </div>
-        </div>
-      ) : !showHistory ? (
-        <div className="cb-chat-history">
-          {messages.map((m, i) => (
-            <div key={i} className={`cb-msg-wrapper ${m.role} ${m.isReport ? 'report-msg' : ''}`}>
-              {m.role === "assistant" && (
-                <div className="cb-msg-avatar">
-                  <div className="cb-dot small"></div>
-                </div>
-              )}
-              <div className={`cb-msg-bubble ${m.role}`}>
-                {m.role === "assistant" && (
-                  <button className="cb-copy-btn" onClick={() => copyToClipboard(m.text)} title="Copy to clipboard">
-                    📋
-                  </button>
-                )}
-                {m.role === "user" ? (
-                  <div className="cb-msg-text">{m.text}</div>
-                ) : m.isReport && result ? (
-                  <>
-                    <AnalysisResults result={result} askInsight={askInsight} insightLoading={insightLoading} />
-                  </>
-                ) : (
-                  <div className="cb-markdown">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-
-          {status === "running" && <PipelineVisualizer stageIndex={stageIndex} status={status} />}
-          <div ref={chatEndRef} />
-        </div>
-      ) : null}
-
-      {!showHistory && (
-        <div className="cb-input-area">
-          {/* Analysis Mode Selector Tabs */}
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '10px', justifyContent: 'center', width: '100%', flexWrap: 'wrap' }}>
+      {!showHistory && !result && messages.length === 0 && (
+        <div style={{ padding: '0 20px', marginBottom: '20px' }}>
+          {/* Top-Level Input Tabs */}
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', borderBottom: '1px solid rgba(120, 100, 255, 0.2)' }}>
             {[
-              { id: "auto", label: "Auto-Detect", icon: "🌐" },
-              { id: "flood", label: "Flood Monitoring", icon: "💧" },
-              { id: "deforestation", label: "Deforestation Compare", icon: "🪵" },
-              { id: "urban", label: "Urban Density", icon: "🏙️" },
-              { id: "agriculture", label: "Vegetation Health", icon: "🌿" },
-            ].map((t) => (
+              { id: "upload", label: "Upload Image", icon: "📤" },
+              { id: "map", label: "Select on Map", icon: "🗺️" },
+              { id: "bhuvan", label: "ISRO Bhuvan Sample", icon: "🛰️" }
+            ].map(tab => (
               <button
-                key={t.id}
-                onClick={() => setMode(t.id as any)}
+                key={tab.id}
+                onClick={() => handleTabChange(tab.id as any)}
                 style={{
-                  padding: '6px 12px',
-                  borderRadius: '16px',
-                  background: mode === t.id ? '#1e293b' : 'transparent',
-                  border: mode === t.id ? '1px solid #475569' : '1px solid transparent',
-                  color: mode === t.id ? '#f8fafc' : '#94a3b8',
-                  fontSize: '12px',
-                  fontWeight: '500',
+                  background: activeTab === tab.id ? 'rgba(120, 100, 255, 0.15)' : 'transparent',
+                  border: 'none',
+                  borderBottom: activeTab === tab.id ? '2px solid #6c47ff' : '2px solid transparent',
+                  padding: '12px 20px',
+                  color: activeTab === tab.id ? '#ffffff' : '#a09cb4',
+                  fontSize: '14px',
+                  fontWeight: 'bold',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '5px',
-                  transition: 'all 0.2s ease',
+                  gap: '8px',
+                  transition: 'all 0.2s'
                 }}
               >
-                <span>{t.icon}</span> {t.label}
+                <span>{tab.icon}</span> {tab.label}
               </button>
             ))}
           </div>
 
-          {mode === "deforestation" ? (
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '12px', width: '100%', flexWrap: 'wrap' }}>
-              {/* Baseline Image Upload Block */}
-              <div style={{ flex: 1, minWidth: '150px' }}>
-                <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '4px', fontFamily: 'monospace' }}>BASELINE IMAGE (BEFORE)</span>
-                {file ? (
-                  <div className="cb-attachment-preview">
-                    <img src={previewUrl!} alt="Baseline Preview" />
-                    <div className="cb-attachment-info">
-                      <span className="cb-attachment-name">{file.name}</span>
-                    </div>
-                    <button className="cb-attachment-remove" onClick={() => handleFile(null)}>×</button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => document.getElementById("file-upload-baseline")?.click()}
-                    style={{
-                      width: '100%',
-                      height: '50px',
-                      borderRadius: '8px',
-                      border: '1px dashed #334155',
-                      background: 'transparent',
-                      color: '#94a3b8',
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    <span>➕ Upload Baseline</span>
-                  </button>
-                )}
-                <input
-                  id="file-upload-baseline"
-                  type="file"
-                  accept="image/png, image/jpeg, image/tiff, image/x-tiff, image/tif, .tif, .tiff"
-                  style={{ display: "none" }}
-                  onChange={(e) => handleFile(e.target.files?.[0] || null)}
-                />
-              </div>
-
-              {/* Current Image Upload Block */}
-              <div style={{ flex: 1, minWidth: '150px' }}>
-                <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '4px', fontFamily: 'monospace' }}>CURRENT IMAGE (AFTER)</span>
-                {secondFile ? (
-                  <div className="cb-attachment-preview">
-                    <img src={secondPreviewUrl!} alt="Current Preview" />
-                    <div className="cb-attachment-info">
-                      <span className="cb-attachment-name">{secondFile.name}</span>
-                    </div>
-                    <button className="cb-attachment-remove" onClick={() => handleSecondFile(null)}>×</button>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => document.getElementById("file-upload-current")?.click()}
-                    style={{
-                      width: '100%',
-                      height: '50px',
-                      borderRadius: '8px',
-                      border: '1px dashed #334155',
-                      background: 'transparent',
-                      color: '#94a3b8',
-                      fontSize: '11px',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '4px',
-                    }}
-                  >
-                    <span>➕ Upload Current</span>
-                  </button>
-                )}
-                <input
-                  id="file-upload-current"
-                  type="file"
-                  accept="image/png, image/jpeg, image/tiff, image/x-tiff, image/tif, .tif, .tiff"
-                  style={{ display: "none" }}
-                  onChange={(e) => handleSecondFile(e.target.files?.[0] || null)}
-                />
-              </div>
+          {/* Analysis Mode Selector Tabs */}
+          {activeTab !== "bhuvan" && (
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              {[
+                { id: "auto", label: "Auto-Detect", icon: "🌐" },
+                { id: "flood", label: "Flood Monitoring", icon: "💧" },
+                { id: "deforestation", label: "Deforestation Compare", icon: "🪵" },
+                { id: "urban", label: "Urban Density", icon: "🏙️" },
+                { id: "agriculture", label: "Vegetation Health", icon: "🌿" },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setMode(t.id as any)}
+                  style={{
+                    padding: '6px 12px',
+                    borderRadius: '16px',
+                    background: mode === t.id ? '#1e293b' : 'transparent',
+                    border: mode === t.id ? '1px solid #475569' : '1px solid transparent',
+                    color: mode === t.id ? '#f8fafc' : '#94a3b8',
+                    fontSize: '12px',
+                    fontWeight: '500',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <span>{t.icon}</span> {t.label}
+                </button>
+              ))}
             </div>
-          ) : (
-            file && (
-              <div className="cb-attachment-preview" style={{ marginBottom: '12px' }}>
-                <img src={previewUrl!} alt="Preview" />
-                <div className="cb-attachment-info">
-                  <span className="cb-attachment-name">{file.name}</span>
-                  <span className="cb-attachment-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+          )}
+
+          {/* Tab Content */}
+          <div style={{ marginBottom: '20px' }}>
+            {activeTab === "upload" && (
+              <div style={{ padding: '20px', border: '1px dashed #334155', borderRadius: '12px', background: 'rgba(13, 13, 36, 0.4)' }}>
+                {mode === "deforestation" ? (
+                  <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                    {/* Baseline Image Upload Block */}
+                    <div style={{ flex: 1, minWidth: '150px' }}>
+                      <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '4px', fontFamily: 'monospace' }}>BASELINE IMAGE (BEFORE)</span>
+                      {file ? (
+                        <div className="cb-attachment-preview">
+                          <img src={previewUrl!} alt="Baseline Preview" />
+                          <div className="cb-attachment-info">
+                            <span className="cb-attachment-name">{file.name}</span>
+                          </div>
+                          <button className="cb-attachment-remove" onClick={() => handleFile(null)}>×</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => document.getElementById("file-upload-baseline")?.click()}
+                          style={{
+                            width: '100%', height: '100px', borderRadius: '8px', border: '1px dashed #475569',
+                            background: 'transparent', color: '#94a3b8', fontSize: '12px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                          }}
+                        >
+                          <span>➕ Upload Baseline GeoTIFF/JPG</span>
+                        </button>
+                      )}
+                      <input
+                        id="file-upload-baseline" type="file" accept="image/png, image/jpeg, image/tiff, image/x-tiff, image/tif, .tif, .tiff"
+                        style={{ display: "none" }} onChange={(e) => handleFile(e.target.files?.[0] || null)}
+                      />
+                    </div>
+
+                    {/* Current Image Upload Block */}
+                    <div style={{ flex: 1, minWidth: '150px' }}>
+                      <span style={{ fontSize: '10px', color: '#64748b', display: 'block', marginBottom: '4px', fontFamily: 'monospace' }}>CURRENT IMAGE (AFTER)</span>
+                      {secondFile ? (
+                        <div className="cb-attachment-preview">
+                          <img src={secondPreviewUrl!} alt="Current Preview" />
+                          <div className="cb-attachment-info">
+                            <span className="cb-attachment-name">{secondFile.name}</span>
+                          </div>
+                          <button className="cb-attachment-remove" onClick={() => handleSecondFile(null)}>×</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => document.getElementById("file-upload-current")?.click()}
+                          style={{
+                            width: '100%', height: '100px', borderRadius: '8px', border: '1px dashed #475569',
+                            background: 'transparent', color: '#94a3b8', fontSize: '12px', cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                          }}
+                        >
+                          <span>➕ Upload Current GeoTIFF/JPG</span>
+                        </button>
+                      )}
+                      <input
+                        id="file-upload-current" type="file" accept="image/png, image/jpeg, image/tiff, image/x-tiff, image/tif, .tif, .tiff"
+                        style={{ display: "none" }} onChange={(e) => handleSecondFile(e.target.files?.[0] || null)}
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {file ? (
+                      <div className="cb-attachment-preview">
+                        <img src={previewUrl!} alt="Preview" />
+                        <div className="cb-attachment-info">
+                          <span className="cb-attachment-name">{file.name}</span>
+                          <span className="cb-attachment-size">{(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                        </div>
+                        <button className="cb-attachment-remove" onClick={() => handleFile(null)}>×</button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => document.getElementById("file-upload")?.click()}
+                        style={{
+                          width: '100%', height: '120px', borderRadius: '8px', border: '1px dashed #475569',
+                          background: 'transparent', color: '#94a3b8', fontSize: '13px', cursor: 'pointer',
+                          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                        }}
+                      >
+                        <span style={{ fontSize: '24px' }}>📤</span>
+                        <span>Click to upload a GeoTIFF or JPG</span>
+                      </button>
+                    )}
+                    <input
+                      id="file-upload" type="file" accept="image/png, image/jpeg, image/tiff, image/x-tiff, image/tif, .tif, .tiff"
+                      style={{ display: "none" }} onChange={(e) => handleFile(e.target.files?.[0] || null)}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+
+            {activeTab === "map" && (
+              <div style={{ height: '400px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #334155', position: 'relative' }}>
+                <MapSelector
+                  onConfirm={(capturedFile, coords, bboxVal) => {
+                    handleFile(capturedFile);
+                    setCoordinates(coords);
+                    setBbox(bboxVal);
+                  }}
+                  onCancel={() => {}}
+                  waterMaskBase64={undefined}
+                  analyzedBbox={null}
+                />
+              </div>
+            )}
+
+            {activeTab === "bhuvan" && (
+              <div style={{ padding: '20px', border: '1px solid rgba(120, 100, 255, 0.2)', borderRadius: '12px', background: 'rgba(13, 13, 36, 0.4)' }}>
+                <p style={{ fontSize: '12px', color: '#a09cb4', marginBottom: '16px', lineHeight: '1.5' }}>
+                  Select a curated offline reference scene from the ISRO Bhuvan/MOSDAC catalog.
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {[
+                    {
+                      id: "isro-liss4-kerala-2023",
+                      title: "Kerala Backwaters Flood Inundation",
+                      sat: "ResourceSat-2 (LISS-IV)",
+                      badge: "Flood Monitoring",
+                      color: "#00e5c8"
+                    },
+                    {
+                      id: "isro-cartosat-blr-2024",
+                      title: "Whitefield Bengaluru Sprawl",
+                      sat: "Cartosat-2E (PAN/MX)",
+                      badge: "Urban Density",
+                      color: "#a78bfa"
+                    },
+                    {
+                      id: "isro-liss4-ghats-deforest",
+                      title: "Western Ghats Deforestation",
+                      sat: "ResourceSat-2 (LISS-IV)",
+                      badge: "Canopy Loss",
+                      color: "#fda4af"
+                    }
+                  ].map((scene) => (
+                    <div 
+                      key={scene.id}
+                      onClick={() => setSelectedBhuvanScene(scene.id)}
+                      style={{
+                        background: selectedBhuvanScene === scene.id ? '#16163b' : '#11112e',
+                        border: selectedBhuvanScene === scene.id ? `1px solid ${scene.color}` : '1px solid rgba(120, 100, 255, 0.15)',
+                        borderRadius: '8px',
+                        padding: '12px 16px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                      }}
+                    >
+                      <div>
+                        <h3 style={{ margin: '0 0 4px 0', fontSize: '13px', color: '#ffffff' }}>{scene.title}</h3>
+                        <div style={{ fontSize: '10px', color: '#64748b', fontFamily: 'monospace' }}>{scene.sat}</div>
+                      </div>
+                      <span style={{ fontSize: '10px', background: 'rgba(120, 100, 255, 0.15)', color: scene.color, padding: '4px 8px', borderRadius: '12px', border: `1px solid ${scene.color}33` }}>
+                        {scene.badge}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-                <button className="cb-attachment-remove" onClick={() => handleFile(null)}>×</button>
               </div>
-            )
-          )}
-          {result && !file && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
-              <button
-                className="cb-attach-btn"
-                style={{ background: 'var(--card)', border: '1px solid var(--border)', fontSize: '12px', padding: '6px 12px', height: '32px' }}
-                onClick={handleResetChat}
-              >
-                🔄 Start New Analysis
-              </button>
-            </div>
-          )}
+            )}
+          </div>
 
+          {/* Unified Action Area */}
+          <div style={{ display: 'flex', gap: '10px', flexDirection: 'column' }}>
+            {activeTab !== "bhuvan" && (
+              <textarea
+                placeholder="Describe what you want to analyze..."
+                value={chatInput}
+                onChange={(e) => setChatInput(e.target.value)}
+                style={{
+                  width: '100%',
+                  minHeight: '60px',
+                  background: 'rgba(13, 13, 36, 0.8)',
+                  border: '1px solid rgba(120, 100, 255, 0.3)',
+                  borderRadius: '12px',
+                  padding: '12px',
+                  color: '#ffffff',
+                  fontFamily: 'inherit',
+                  fontSize: '14px',
+                  resize: 'vertical'
+                }}
+              />
+            )}
+            
+            <button
+              onClick={handleUnifiedAnalyze}
+              disabled={
+                status === "running" ||
+                (activeTab === "upload" && mode === "deforestation" && (!file || !secondFile)) ||
+                (activeTab === "upload" && mode !== "deforestation" && !file) ||
+                (activeTab === "map" && !coordinates) ||
+                (activeTab === "bhuvan" && !selectedBhuvanScene)
+              }
+              style={{
+                width: '100%',
+                padding: '14px',
+                background: 'linear-gradient(135deg, #6c47ff, #00e5c8)',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '12px',
+                fontSize: '16px',
+                fontWeight: 'bold',
+                cursor: 'pointer',
+                opacity: (status === "running" || 
+                         (activeTab === "upload" && mode === "deforestation" && (!file || !secondFile)) ||
+                         (activeTab === "upload" && mode !== "deforestation" && !file) ||
+                         (activeTab === "map" && !coordinates) ||
+                         (activeTab === "bhuvan" && !selectedBhuvanScene)) ? 0.5 : 1,
+                transition: 'opacity 0.2s'
+              }}
+            >
+              {status === "running" ? "Analyzing..." : "Analyze Source"}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Render Chat History / Results */}
+      <div className="cb-chat-history">
+        {messages.map((m, i) => (
+          <div key={i} className={`cb-msg-wrapper ${m.role} ${m.isReport ? 'report-msg' : ''}`}>
+            {m.role === "assistant" && (
+              <div className="cb-msg-avatar">
+                <div className="cb-dot small"></div>
+              </div>
+            )}
+            <div className={`cb-msg-bubble ${m.role}`}>
+              {m.role === "assistant" && (
+                <button className="cb-copy-btn" onClick={() => copyToClipboard(m.text)} title="Copy to clipboard">
+                  📋
+                </button>
+              )}
+              {m.role === "user" ? (
+                <div className="cb-msg-text">{m.text}</div>
+              ) : m.isReport && result ? (
+                <>
+                  <AnalysisResults result={result} askInsight={askInsight} insightLoading={insightLoading} />
+                </>
+              ) : (
+                <div className="cb-markdown">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]}>{m.text}</ReactMarkdown>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {status === "running" && <PipelineVisualizer stageIndex={stageIndex} status={status} />}
+        <div ref={chatEndRef} />
+      </div>
+      
+      {/* Follow up chat input if result exists */}
+      {result && !showHistory && (
+        <div className="cb-input-area" style={{ marginTop: 'auto' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>
+            <button
+              className="cb-attach-btn"
+              style={{ background: 'var(--card)', border: '1px solid var(--border)', fontSize: '12px', padding: '6px 12px', height: '32px' }}
+              onClick={handleResetChat}
+            >
+              🔄 Start New Analysis
+            </button>
+          </div>
           <div className="cb-input-box">
-            <button
-              className="cb-attach-btn"
-              onClick={() => document.getElementById("file-upload")?.click()}
-              title="Attach Image"
-              type="button"
-            >
-              <span style={{ fontSize: "1.1rem" }}>+</span>
-              <span className="cb-attach-text">Attach</span>
-            </button>
-            <button
-              className="cb-attach-btn"
-              onClick={() => setIsMapOpen(true)}
-              title="Select Area on Map"
-              type="button"
-              style={{ borderLeft: 'none' }}
-            >
-              <span style={{ fontSize: "1.1rem" }}>🗺️</span>
-              <span className="cb-attach-text">Map</span>
-            </button>
-            <button
-              className="cb-attach-btn"
-              onClick={() => setIsBhuvanCatalogOpen(true)}
-              title="Ingest from ISRO Bhuvan Catalog"
-              type="button"
-              style={{ borderLeft: 'none' }}
-            >
-              <span style={{ fontSize: "1.1rem" }}>🛰️</span>
-              <span className="cb-attach-text">Bhuvan</span>
-            </button>
-            <input
-              id="file-upload"
-              type="file"
-              accept="image/png, image/jpeg, image/tiff, image/x-tiff, image/tif, .tif, .tiff"
-              style={{ display: "none" }}
-              onChange={(e) => handleFile(e.target.files?.[0] || null)}
-            />
             <textarea
               id="chat-input-textarea"
-              placeholder={
-                mode === "deforestation"
-                  ? "Describe baseline comparison context..."
-                  : file || result
-                  ? "Ask a follow-up question..."
-                  : "Describe what you want to analyze..."
-              }
+              placeholder="Ask a follow-up question..."
               value={chatInput}
               onChange={(e) => setChatInput(e.target.value)}
-              onKeyDown={handleKeyDown}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  if (chatInput.trim() && status !== "running") {
+                    askInsight(chatInput.trim());
+                    setChatInput("");
+                  }
+                }
+              }}
               rows={Math.min(chatInput.split("\n").length, 5) || 1}
             />
             {isStreaming || status === "running" ? (
@@ -403,164 +475,17 @@ export const ChatInterface = memo(({
             ) : (
               <button
                 className="cb-submit-btn"
-                onClick={handleSubmit}
-                disabled={
-                  (!chatInput.trim()) ||
-                  (mode === "deforestation" ? (!file || !secondFile) : (!file)) ||
-                  status === "running"
-                }
+                onClick={() => {
+                  if (chatInput.trim() && status !== "running") {
+                    askInsight(chatInput.trim());
+                    setChatInput("");
+                  }
+                }}
+                disabled={!chatInput.trim() || status === "running"}
               >
                 ↑
               </button>
             )}
-          </div>
-          <div className="cb-footer-text">
-            Orionix can make mistakes. Verify critical intelligence.
-          </div>
-        </div>
-      )}
-      {isMapOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-sm p-4">
-          <MapSelector
-            onConfirm={(capturedFile, coords, bboxVal) => {
-              handleFile(capturedFile);
-              setCoordinates(coords);
-              setBbox(bboxVal);
-              setIsMapOpen(false);
-            }}
-            onCancel={() => setIsMapOpen(false)}
-            waterMaskBase64={result?.water_mask_base64}
-            analyzedBbox={
-              result?.bbox && result.bbox.length === 4
-                ? {
-                    minLat: result.bbox[0],
-                    minLng: result.bbox[1],
-                    maxLat: result.bbox[2],
-                    maxLng: result.bbox[3],
-                  }
-                : null
-            }
-          />
-        </div>
-      )}
-
-      {isBhuvanCatalogOpen && (
-        <div 
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(3, 3, 10, 0.85)',
-            backdropFilter: 'blur(12px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 9999,
-            padding: '20px'
-          }}
-          onClick={() => setIsBhuvanCatalogOpen(false)}
-        >
-          <div 
-            style={{
-              background: '#0d0d24',
-              border: '1px solid rgba(120, 100, 255, 0.3)',
-              borderRadius: '16px',
-              maxWidth: '650px',
-              width: '100%',
-              padding: '28px',
-              position: 'relative',
-              boxShadow: '0 0 40px rgba(108, 71, 255, 0.25)',
-              fontFamily: "Space Grotesk, sans-serif"
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button 
-              onClick={() => setIsBhuvanCatalogOpen(false)}
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: 'none',
-                border: 'none',
-                color: '#a09cb4',
-                fontSize: '20px',
-                cursor: 'pointer'
-              }}
-            >
-              ✕
-            </button>
-            <h2 style={{ margin: '0 0 6px 0', fontSize: '10px', color: '#00e5c8', fontFamily: 'monospace', textTransform: 'uppercase' }}>
-              ISRO Satellite Catalog Ingestion
-            </h2>
-            <h1 style={{ margin: '0 0 12px 0', fontSize: '20px', fontWeight: 'bold', color: '#ffffff' }}>
-              Select Bundled Bhuvan/MOSDAC Reference Scene
-            </h1>
-            <p style={{ fontSize: '13px', lineHeight: '1.5', color: '#a09cb4', margin: '0 0 20px 0', textAlign: 'justify' }}>
-              This module is <strong>designed to plug directly into ISRO's live Bhuvan/MOSDAC Web Coverage Service (WCS) data feeds</strong>. 
-              Because live production access requires registered organization credentials not available in this environment, 
-              this demo runs on a curated catalog of manually-sourced reference scenes bundled locally for offline testing.
-            </p>
-
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              {[
-                {
-                  id: "isro-liss4-kerala-2023",
-                  title: "Kerala Backwaters Flood Inundation",
-                  sat: "ResourceSat-2 (LISS-IV)",
-                  desc: "True-color multispectral tile capturing active flood extents and waterlogging along the coastal backwaters of Alappuzha (Aug 2023).",
-                  badge: "Flood Monitoring",
-                  color: "#00e5c8"
-                },
-                {
-                  id: "isro-cartosat-blr-2024",
-                  title: "Whitefield Bengaluru Sprawl",
-                  sat: "Cartosat-2E (PAN/MX)",
-                  desc: "High-resolution pan-sharpened frame depicting rapid residential expansion and industrial zoning clusters (Mar 2024).",
-                  badge: "Urban Density",
-                  color: "#a78bfa"
-                },
-                {
-                  id: "isro-liss4-ghats-deforest",
-                  title: "Western Ghats Deforestation",
-                  sat: "ResourceSat-2 (LISS-IV)",
-                  desc: "Multispectral tile showing structural canopy loss and degradation within protected forest zones in Karnataka (May 2024).",
-                  badge: "Canopy Loss",
-                  color: "#fda4af"
-                }
-              ].map((scene) => (
-                <div 
-                  key={scene.id}
-                  onClick={() => {
-                    setIsBhuvanCatalogOpen(false);
-                    if (ingestBhuvanScene) ingestBhuvanScene(scene.id);
-                  }}
-                  style={{
-                    background: '#11112e',
-                    border: '1px solid rgba(120, 100, 255, 0.15)',
-                    borderRadius: '12px',
-                    padding: '14px 18px',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '6px'
-                  }}
-                  onMouseEnter={(e) => { e.currentTarget.style.border = '1px solid rgba(120, 100, 255, 0.4)'; e.currentTarget.style.background = '#16163b'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.border = '1px solid rgba(120, 100, 255, 0.15)'; e.currentTarget.style.background = '#11112e'; }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ margin: 0, fontSize: '14px', color: '#ffffff', fontWeight: 'bold' }}>{scene.title}</h3>
-                    <span style={{ fontSize: '10px', background: 'rgba(120, 100, 255, 0.15)', color: scene.color, padding: '2px 8px', borderRadius: '10px', border: `1px solid ${scene.color}33` }}>
-                      {scene.badge}
-                    </span>
-                  </div>
-                  <p style={{ margin: 0, fontSize: '11px', color: '#8b8ba8', lineHeight: '1.4' }}>{scene.desc}</p>
-                  <div style={{ display: 'flex', gap: '12px', fontSize: '10px', color: '#64748b', fontFamily: 'monospace', marginTop: '2px' }}>
-                    <span>ID: {scene.id}</span>
-                    <span>SATELLITE: {scene.sat}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
           </div>
         </div>
       )}

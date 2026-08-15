@@ -301,7 +301,7 @@ export function useAnalysis() {
     setStatus(s.result || s.messages.length > 0 ? "done" : "idle");
   }, []);
 
-  const runAnalysis = useCallback(async (prompt: string) => {
+  const runAnalysis = useCallback(async (prompt: string, inputSource: string = "Upload Image") => {
     if (mode === "deforestation") {
       if (!file || !secondFile) {
         setError("Both Baseline and Current images are required for Deforestation Compare mode.");
@@ -348,6 +348,7 @@ export function useAnalysis() {
           water_trend: MOCK_DEMO_COMPARE.water_trend,
         };
       }
+      simulatedData.input_source = inputSource;
       setResult(simulatedData);
       setStatus("done");
       setMessages((prev) => [
@@ -430,6 +431,7 @@ export function useAnalysis() {
       });
 
       const [data] = await Promise.all([fetchAnalysis, minDuration]);
+      data.input_source = inputSource;
       setResult(data);
       setStatus("done");
 
@@ -510,7 +512,7 @@ export function useAnalysis() {
     }
   }, [result, insightLoading]);
 
-  const ingestBhuvanScene = useCallback(async (sceneId: string) => {
+  const ingestBhuvanScene = useCallback(async (sceneId: string, inputSource: string = "ISRO Bhuvan Sample") => {
     setStatus("running");
     setResult(null);
     setError(null);
@@ -564,6 +566,7 @@ export function useAnalysis() {
           vegetation_health_disclaimer: "ISRO Bhuvan Representative Imagery (Cartosat-2E - PAN/MX). Bands processed: Panchromatic, R, G, B."
         };
       }
+      simulatedData.input_source = inputSource;
       setResult(simulatedData);
       setStatus("done");
       setMessages((prev) => [
@@ -594,6 +597,7 @@ export function useAnalysis() {
       });
 
       const [data] = await Promise.all([fetchIngestion, minDuration]);
+      data.input_source = inputSource;
       setResult(data);
       setStatus("done");
       setMessages((prev) => [
