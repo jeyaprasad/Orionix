@@ -16,11 +16,11 @@ function ErrorFallback({ error, resetErrorBoundary }: any) {
 
 interface AnalysisResultsProps {
   result: AnalysisResult;
-  askInsight: (q: string) => void;
+  setChatInput: (q: string) => void;
   insightLoading: boolean;
 }
 
-export const AnalysisResults = memo(({ result, askInsight, insightLoading }: AnalysisResultsProps) => {
+export const AnalysisResults = memo(({ result, setChatInput, insightLoading }: AnalysisResultsProps) => {
   const [isDownloading, setIsDownloading] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showReasoning, setShowReasoning] = useState(false);
@@ -455,7 +455,10 @@ export const AnalysisResults = memo(({ result, askInsight, insightLoading }: Ana
                 key={idx}
                 className="cb-attach-btn"
                 disabled={insightLoading}
-                onClick={() => askInsight(btn.q)}
+                onClick={() => {
+                  setChatInput(btn.q);
+                  document.getElementById("chat-input-textarea")?.focus();
+                }}
                 style={{ fontSize: '13px', padding: '8px 16px', height: 'auto', display: 'flex', alignItems: 'center' }}
               >
                 {btn.label}

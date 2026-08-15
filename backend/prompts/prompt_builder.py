@@ -24,6 +24,8 @@ from backend.prompts.templates import (
     SECONDARY_LAND_COVER_FALLBACK,
     QUESTION_SYSTEM_PROMPT,
     QUESTION_USER_TEMPLATE,
+    CHAT_SYSTEM_PROMPT,
+    CHAT_USER_TEMPLATE,
 )
 from backend.schemas.prompt import EOContext, PromptPayload
 from backend.utils.logger import logger
@@ -133,6 +135,31 @@ class PromptBuilder:
 
         return PromptPayload(
             system_prompt=QUESTION_SYSTEM_PROMPT,
+            user_prompt=user_prompt,
+        )
+
+    def build_followup_prompt(self, eo_context: EOContext) -> PromptPayload:
+        """
+        Build a PromptPayload for conversational follow-ups.
+
+        Args:
+            eo_context: The validated EOContext from the completed analysis.
+
+        Returns:
+            PromptPayload with the conversational system prompt and the context-setting user prompt.
+        """
+        self._validate(eo_context)
+        secondary = self._resolve_secondary(eo_context.secondary_land_cover)
+
+        user_prompt = CHAT_USER_TEMPLATE.format(
+            dominant_land_cover=eo_context.dominant_land_cover,
+            secondary_land_cover=secondary,
+            confidence=eo_context.confidence,
+            summary=eo_context.summary,
+        )
+
+        return PromptPayload(
+            system_prompt=CHAT_SYSTEM_PROMPT,
             user_prompt=user_prompt,
         )
 

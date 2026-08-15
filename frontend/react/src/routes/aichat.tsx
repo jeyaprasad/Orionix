@@ -44,24 +44,7 @@ function OrionixDemo() {
   const [showHistory, setShowHistory] = useState(false);
   const [isArchModalOpen, setIsArchModalOpen] = useState(false);
 
-  const handleSubmit = () => {
-    const prompt = chatInput.trim();
-    if (!prompt) return;
-    if (mode === "deforestation") {
-      if (file && secondFile && status !== "running") {
-        runAnalysis(prompt);
-        setChatInput("");
-      }
-    } else {
-      if (file && status !== "running") {
-        runAnalysis(prompt);
-        setChatInput("");
-      } else if (result && status !== "running") {
-        askInsight(prompt);
-        setChatInput("");
-      }
-    }
-  };
+  // handleSubmit moved to ChatInterface for better tab integration
 
   const handleResetChat = () => {
     handleReset();
@@ -152,7 +135,7 @@ function OrionixDemo() {
                 setMode={setMode}
                 chatInput={chatInput}
                 setChatInput={setChatInput}
-                handleSubmit={handleSubmit}
+                runAnalysis={runAnalysis}
                 handleFile={handleFile}
                 handleSecondFile={handleSecondFile}
                 isStreaming={isStreaming}

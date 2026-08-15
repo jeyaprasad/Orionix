@@ -20,6 +20,9 @@ from backend.llm.gpt_service import GPTService
 from backend.llm.openrouter import OpenRouterClient
 from backend.utils.logger import logger
 
+from openai import AuthenticationError, RateLimitError, APITimeoutError, APIStatusError
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+
 
 class QuestionService:
     """
@@ -61,20 +64,44 @@ class QuestionService:
             logger.warning(f"[QuestionService] Prompt build failed: {e}")
             return None, "Invalid EO context — cannot generate insight."
 
-        logger.info("[QuestionService] Calling GPT for question answer.")
-        try:
-            result = await self.gpt_service.generate_response(
+        @retry(
+            stop=stop_after_attempt(2),
+            wait=wait_exponential(multiplier=1, min=2, max=10),
+            retry=retry_if_exception_type((RateLimitError, APITimeoutError)),
+            reraise=True
+        )
+        async def _call_gpt_with_retry():
+            return await self.gpt_service.generate_response(
                 system_prompt=payload.system_prompt,
                 user_prompt=payload.user_prompt,
             )
+
+        logger.info("[QuestionService] Calling GPT for question answer.")
+        try:
+            result = await _call_gpt_with_retry()
             answer = result.get("response", "").strip()
             if not answer:
                 return None, "GPT returned an empty response."
             logger.info("[QuestionService] Answer received successfully.")
             return answer, None
 
+        except RateLimitError as e:
+            response_body = e.response.text if hasattr(e, 'response') else str(e)
+            logger.error(f"[QuestionService] RateLimitError (429): {e}. Response body: {response_body}")
+            return None, "Rate limited — try again shortly."
+        except AuthenticationError as e:
+            response_body = e.response.text if hasattr(e, 'response') else str(e)
+            logger.error(f"[QuestionService] AuthenticationError (401/403): {e}. Response body: {response_body}")
+            return None, "API key invalid — check configuration."
+        except APITimeoutError as e:
+            logger.error(f"[QuestionService] APITimeoutError: {e}")
+            return None, "Network timeout — please try again."
+        except APIStatusError as e:
+            response_body = e.response.text if hasattr(e, 'response') else str(e)
+            logger.error(f"[QuestionService] APIStatusError (Status {e.status_code}): {e.message}. Response body: {response_body}")
+            return None, f"API error occurred (Status {e.status_code})."
         except Exception as e:
-            logger.warning(f"[QuestionService] GPT call failed: {type(e).__name__}: {e}")
+            logger.error(f"[QuestionService] GPT call failed unexpectedly: {type(e).__name__}: {e}", exc_info=True)
             return None, "Insight generation is temporarily unavailable."
 
 
