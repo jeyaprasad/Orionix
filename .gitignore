@@ -20,3 +20,5 @@ data/
 *.log
 *.txt
 test_result.json
+
+!resources/data/.gitkeep
