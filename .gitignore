@@ -15,7 +15,7 @@ build/
 
 
 # Orionix Models and Data
-models/
+/models/
 data/
 *.log
 *.txt
