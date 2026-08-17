@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from backend.config.settings import settings
+from backend.core.settings import settings
 from backend.utils.logger import logger
 from backend.api.chat import router as chat_router
 from backend.api.vision import router as vision_router

@@ -4,12 +4,12 @@ from pydantic import BaseModel
 from typing import Dict, Any, List, Optional
 import time
 
-from backend.llm.openrouter import OpenRouterClient
-from backend.llm.gpt_service import GPTService
-from backend.prompts.prompt_builder import prompt_builder
-from backend.schemas.prompt import EOContext
+from backend.services.llm.openrouter import OpenRouterClient
+from backend.services.llm.gpt_service import GPTService
+from backend.services.prompts.prompt_builder import prompt_builder
+from backend.models.prompt import EOContext
 from backend.utils.logger import logger
-from backend.config.settings import settings
+from backend.core.settings import settings
 
 router = APIRouter(prefix="/api/chat", tags=["Chat"])
 

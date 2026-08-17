@@ -1,9 +1,9 @@
 from openai import AsyncOpenAI, AuthenticationError, APIConnectionError, RateLimitError, APITimeoutError, APIStatusError
 from typing import Dict, Any
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-from backend.config.settings import settings
+from backend.core.settings import settings
 from backend.utils.logger import logger
-from backend.llm.base import BaseLLMProvider
+from backend.services.llm.base import BaseLLMProvider
 
 
 # Note: GPT-OSS has no native vision capabilities. This system (Orionix) exists

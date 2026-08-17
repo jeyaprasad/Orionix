@@ -17,14 +17,14 @@ import time
 import json
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException, status
 from typing import Optional
-from backend.schemas.analysis import AnalysisResponse, FloodComparisonResponse, VegetationComparisonResponse
+from backend.models.analysis import AnalysisResponse, FloodComparisonResponse, VegetationComparisonResponse
 from backend.services.analysis_service import analysis_service
 from backend.services.trend_analysis import trend_analysis_service
 from backend.utils.logger import logger
-from backend.vision.water_detection import detect_water_extent
-from backend.vision.image_loader import validate_and_load_image
-from backend.vision.vegetation_index import compute_vegetation_index
-from backend.vision.urban_density import compute_urban_density
+from backend.services.vision.water_detection import detect_water_extent
+from backend.services.vision.image_loader import validate_and_load_image
+from backend.services.vision.vegetation_index import compute_vegetation_index
+from backend.services.vision.urban_density import compute_urban_density
 
 router = APIRouter(prefix="/api", tags=["Analysis"])
 

@@ -18,7 +18,7 @@ Constraints enforced by design:
 
 import time
 from typing import Optional
-from backend.prompts.templates import (
+from backend.services.prompts.templates import (
     SYSTEM_PROMPT,
     USER_PROMPT_TEMPLATE,
     SECONDARY_LAND_COVER_FALLBACK,
@@ -27,7 +27,7 @@ from backend.prompts.templates import (
     CHAT_SYSTEM_PROMPT,
     CHAT_USER_TEMPLATE,
 )
-from backend.schemas.prompt import EOContext, PromptPayload
+from backend.models.prompt import EOContext, PromptPayload
 from backend.utils.logger import logger
 
 

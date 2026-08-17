@@ -2,8 +2,8 @@ import io
 import time
 from backend.utils.logger import logger
 from xhtml2pdf import pisa
-from backend.schemas.analysis import AnalysisResponse
-from backend.report.html_renderer import html_renderer
+from backend.models.analysis import AnalysisResponse
+from backend.services.report.html_renderer import html_renderer
 
 class PDFGenerator:
     def generate_pdf(self, analysis: AnalysisResponse, image_base64: str = None) -> bytes:

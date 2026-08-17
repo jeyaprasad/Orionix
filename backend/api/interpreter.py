@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
-from backend.interpreter.eo_schema import EOInterpreterInput, EOInterpretation
-from backend.interpreter.eo_interpreter import interpret
+from backend.services.interpreter.eo_schema import EOInterpreterInput, EOInterpretation
+from backend.services.interpreter.eo_interpreter import interpret
 from backend.utils.logger import logger
 
 router = APIRouter(prefix="/api/interpreter", tags=["EO Interpreter"])

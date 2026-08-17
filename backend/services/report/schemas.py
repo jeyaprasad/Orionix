@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
-from backend.schemas.analysis import AnalysisResponse
+from backend.models.analysis import AnalysisResponse
 
 class ReportRequest(BaseModel):
     dominant_land_cover: str

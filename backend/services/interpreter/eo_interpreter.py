@@ -16,12 +16,12 @@ Constraints enforced by design:
 import time
 from typing import List, Optional
 
-from backend.interpreter.eo_schema import (
+from backend.services.interpreter.eo_schema import (
     SimilarityEntry,
     RankedEOConcept,
     EOInterpretation,
 )
-from backend.interpreter.eo_rules import (
+from backend.services.interpreter.eo_rules import (
     EO_CATEGORY_KEYWORDS,
     CONFIDENCE_THRESHOLDS,
     MIN_COSINE_SIMILARITY,

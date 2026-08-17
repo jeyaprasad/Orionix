@@ -29,33 +29,33 @@ from typing import Optional
 
 from PIL import Image
 
-from backend.vision.image_loader import validate_and_load_image
-from backend.vision.geo_loader import load_geotiff
-from backend.vision.inference import run_remoteclip_inference
-from backend.vision.remoteclip import remoteclip_service
+from backend.services.vision.image_loader import validate_and_load_image
+from backend.services.vision.geo_loader import load_geotiff
+from backend.services.vision.inference import run_remoteclip_inference
+from backend.services.vision.remoteclip import remoteclip_service
 
-from backend.interpreter.eo_interpreter import interpret
-from backend.interpreter.eo_schema import SimilarityEntry
-from backend.interpreter.eo_rules import compute_flood_risk_score
+from backend.services.interpreter.eo_interpreter import interpret
+from backend.services.interpreter.eo_schema import SimilarityEntry
+from backend.services.interpreter.eo_rules import compute_flood_risk_score
 from backend.services.disaster_feed import query_gdacs_flood_alerts
 from backend.services.weather_service import weather_service
 
-from backend.prompts.prompt_builder import prompt_builder
-from backend.schemas.prompt import EOContext
+from backend.services.prompts.prompt_builder import prompt_builder
+from backend.models.prompt import EOContext
 
-from backend.llm.gpt_service import GPTService
-from backend.llm.openrouter import OpenRouterClient
+from backend.services.llm.gpt_service import GPTService
+from backend.services.llm.openrouter import OpenRouterClient
 
-from backend.schemas.analysis import (
+from backend.models.analysis import (
     AnalysisResponse,
     AnalysisMetadata,
     LandCoverClass,
     AnalysisFlag,
 )
 from backend.utils.logger import logger
-from backend.report.schemas import ReportRequest, ReportResponse
-from backend.report.report_service import report_service
-from backend.report.html_renderer import html_renderer
+from backend.services.report.schemas import ReportRequest, ReportResponse
+from backend.services.report.report_service import report_service
+from backend.services.report.html_renderer import html_renderer
 
 
 class AnalysisService:
@@ -585,7 +585,7 @@ class AnalysisService:
         Returns:
             Tuple of (gpt_text, reasoning_trace, warning_message, llm_model_id).
         """
-        from backend.llm.openrouter import OpenRouterClient
+        from backend.services.llm.openrouter import OpenRouterClient
         llm_model_id = self.gpt_service.provider.model or "unknown"
 
         try:

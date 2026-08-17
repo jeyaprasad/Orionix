@@ -14,10 +14,10 @@ Design rules:
 
 from typing import Optional
 
-from backend.prompts.prompt_builder import prompt_builder
-from backend.schemas.prompt import EOContext
-from backend.llm.gpt_service import GPTService
-from backend.llm.openrouter import OpenRouterClient
+from backend.services.prompts.prompt_builder import prompt_builder
+from backend.models.prompt import EOContext
+from backend.services.llm.gpt_service import GPTService
+from backend.services.llm.openrouter import OpenRouterClient
 from backend.utils.logger import logger
 
 from openai import AuthenticationError, RateLimitError, APITimeoutError, APIStatusError

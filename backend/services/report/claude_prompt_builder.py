@@ -1,6 +1,6 @@
 from pydantic import BaseModel
-from backend.report.templates import REPORT_SYSTEM_PROMPT, REPORT_USER_PROMPT
-from backend.report.schemas import ReportRequest
+from backend.services.report.templates import REPORT_SYSTEM_PROMPT, REPORT_USER_PROMPT
+from backend.services.report.schemas import ReportRequest
 
 class ReportPromptPayload(BaseModel):
     system_prompt: str

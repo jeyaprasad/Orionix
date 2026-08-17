@@ -18,7 +18,7 @@ from fastapi import APIRouter, HTTPException, status
 from pydantic import BaseModel, Field
 from typing import Optional
 
-from backend.schemas.prompt import EOContext
+from backend.models.prompt import EOContext
 from backend.services.question_service import question_service
 from backend.utils.logger import logger
 

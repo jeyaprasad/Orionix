@@ -3,7 +3,7 @@ import numpy as np
 from PIL import Image
 from typing import Any
 from backend.utils.logger import logger
-from backend.vision.water_detection import detect_water_extent
+from backend.services.vision.water_detection import detect_water_extent
 
 def preprocess_image(image: Image.Image, transform: Any) -> torch.Tensor:
     """

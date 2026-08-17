@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any
 from backend.services.weather_service import weather_service
-from backend.interpreter.eo_rules import compute_flood_risk_score
+from backend.services.interpreter.eo_rules import compute_flood_risk_score
 from backend.utils.logger import logger
 
 router = APIRouter(prefix="/api/alert", tags=["Early Warning Alerts"])

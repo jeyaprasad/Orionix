@@ -1,5 +1,5 @@
 from typing import Dict, Any
-from backend.llm.base import BaseLLMProvider
+from backend.services.llm.base import BaseLLMProvider
 
 class GPTService:
     def __init__(self, provider: BaseLLMProvider):

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Form
 from backend.services.bhuvan_service import bhuvan_service
 from backend.services.analysis_service import analysis_service
-from backend.schemas.analysis import AnalysisResponse
+from backend.models.analysis import AnalysisResponse
 from typing import Optional
 
 router = APIRouter(prefix="/api/bhuvan", tags=["ISRO Bhuvan Integration"])

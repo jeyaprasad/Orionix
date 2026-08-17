@@ -4,13 +4,13 @@ import math
 import numpy as np
 from PIL import Image
 from typing import Dict, Any
-from backend.vision.remoteclip import remoteclip_service
-from backend.vision.preprocessing import preprocess_image, detect_water_extent
-from backend.vision.vegetation_index import compute_vegetation_index
-from backend.vision.urban_density import compute_urban_density
+from backend.services.vision.remoteclip import remoteclip_service
+from backend.services.vision.preprocessing import preprocess_image, detect_water_extent
+from backend.services.vision.vegetation_index import compute_vegetation_index
+from backend.services.vision.urban_density import compute_urban_density
 from backend.utils.logger import logger
 
-from backend.vision.labels import ZERO_SHOT_LABELS
+from backend.services.vision.labels import ZERO_SHOT_LABELS
 
 CANDIDATE_TAGS = ZERO_SHOT_LABELS
 

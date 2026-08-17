@@ -1,9 +1,9 @@
 import time
 from backend.utils.logger import logger
-from backend.llm.openrouter import OpenRouterClient
-from backend.config.settings import settings
-from backend.report.schemas import ReportRequest, ReportResponse
-from backend.report.claude_prompt_builder import ClaudePromptBuilder
+from backend.services.llm.openrouter import OpenRouterClient
+from backend.core.settings import settings
+from backend.services.report.schemas import ReportRequest, ReportResponse
+from backend.services.report.claude_prompt_builder import ClaudePromptBuilder
 
 class ReportService:
     def __init__(self):

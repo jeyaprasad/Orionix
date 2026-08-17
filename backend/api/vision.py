@@ -1,8 +1,8 @@
 from fastapi import APIRouter, File, UploadFile, HTTPException, status
-from backend.vision.image_loader import validate_and_load_image
-from backend.vision.inference import run_remoteclip_inference
-from backend.vision.remoteclip import remoteclip_service
-from backend.vision.schemas import ImageInspectionResponse
+from backend.services.vision.image_loader import validate_and_load_image
+from backend.services.vision.inference import run_remoteclip_inference
+from backend.services.vision.remoteclip import remoteclip_service
+from backend.services.vision.schemas import ImageInspectionResponse
 from backend.utils.logger import logger
 
 router = APIRouter(prefix="/api/vision", tags=["Vision"])
